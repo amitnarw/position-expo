@@ -1,56 +1,82 @@
-# Welcome to your Expo app 👋
+# FORMA
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+**An atlas of closeness.**
 
-## Get started
+FORMA is an illustrated, educational field guide to intimacy for adults — thirty-six abstract
+contour plates, eight short guides, and six curated paths. It is quiet, plain-spoken, and
+non-explicit by design: every plate is a line drawing you read rather than a picture you look at.
 
-1. Install dependencies
+Built with Expo, React Native, Expo Router, NativeWind and Skia. Runs in Expo Go.
 
-   ```bash
-   npm install
-   ```
+---
 
-2. Start the app
+## What it is
 
-   ```bash
-   npx expo start
-   ```
+- **36 plates** — abstract line studies, each with a plain-language name, a short setup, steps to
+  arrive, a note on why the shape works, small adjustments, and a care note.
+- **8 guides** — consent, communication, anatomy, pace, comfort, lubricant, aftercare, and what to
+  do when something goes wrong.
+- **6 collections** — curated paths for slower, closer, or more playful evenings.
+- **Saved and history** — kept on the device only.
 
-In the output, you'll find options to open the app in a
+## What it is not
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+- Not explicit. No photography, no realistic nudity — contour lines only.
+- Not medical advice, therapy, or a substitute for talking to your partner or a clinician.
+- Not a scoreboard. There are no achievements, streaks, or goals.
+- Not networked. There is no account, no analytics, no tracking, no server.
 
-You can start developing by editing the files inside the **src/app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+## Privacy
 
-## Get a fresh project
+FORMA stores everything in a local SQLite key-value database on your device: your age-gate
+confirmation, onboarding answers, appearance settings, saved plates, and recently opened plates.
+Nothing leaves the device. There is no sign-in, no ad SDK, no crash reporting, and no network
+calls to a FORMA backend. Clearing the app data — or **Settings → Reset everything** — removes all
+of it.
 
-When you're ready, run:
+## Running it
 
 ```bash
-npm run reset-project
+npm install
+npx expo start        # open in Expo Go
+npx tsc --noEmit      # typecheck
+npx expo-doctor       # dependency and config checks
+npx expo export --platform ios   # production bundle check
 ```
 
-This command will move the starter code to the **example** directory and create a blank **src/app** directory where you can start developing.
+All native modules used here ship inside the Expo Go client for the current SDK (Skia, Reanimated,
+Gesture Handler, Screens, SQLite), so no development build is required.
 
-### Other setup steps
+## Project layout
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+```
+src/app/            file-based routes (Expo Router)
+  (tabs)/           Today · Atlas · Learn · Saved
+  plate/[slug]      plate detail (modal)
+  guide/[slug]      guide detail (modal)
+  collection/[slug] collection detail (modal)
+src/art/            pose geometry + scene cache
+src/components/     UI primitives, plate cards, nav, editorial blocks
+src/content/        36 positions, 8 guides, 6 collections
+src/store/          local settings + library persistence
+src/theme/          tokens, theme provider, fonts, scale
+scripts/            art QA sheets and brand asset generation
+```
 
-## Learn more
+See `HANDOFF.md` for the deeper architectural notes, the art-engine explanation, and the
+verification checklist.
 
-To learn more about developing your project with Expo, look at the following resources:
+## Design
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+Quiet Heat: bone paper, ink, a single clay accent; Fraunces for display, Geist for interface;
+hairlines instead of shadows; generous margins; sentence case throughout. The app ships light and
+dark palettes and four accent editions (clay, sage, plum, ochre).
 
-## Join the community
+## Age
 
-Join our community of developers creating universal apps.
+FORMA is intended for adults (18+). An age gate runs before anything else is shown, and nothing is
+stored until it is confirmed.
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+## License
+
+See `LICENSE`.

@@ -133,7 +133,7 @@ export default function OnboardingScreen() {
 
       <Progress step={step} />
 
-      <Reveal key={step} style={{ flex: 1 }}>
+      <Reveal key={step}>
         {step === 0 ? (
           <View className="pt-10">
             <AppText variant="label">Welcome</AppText>

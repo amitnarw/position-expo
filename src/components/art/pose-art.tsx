@@ -35,7 +35,9 @@ export function PoseArt({ pose, size, animate = false, mono = false, ground }: P
 
   const figures = useMemo(() => getArt(pose), [pose]);
   const dim = size ?? measured;
-  const background = ground ?? colors.paper;
+  // Body paths are filled with the ground colour to knock out the figure behind,
+  // so it must match the surface the plate is mounted on (cards use `bg-surface`).
+  const background = ground ?? colors.surface;
 
   const phase = useSharedValue(0);
   const active = animate && !reduceMotion;

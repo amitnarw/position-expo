@@ -25,11 +25,14 @@ This file is the single source of truth for resuming work. Read the **Status** a
 | Search + Settings modals | ✅ Done |
 | Brand assets (icon, splash, adaptive, favicon) | ✅ Generated |
 | `npx tsc --noEmit` | ✅ **Clean (0 errors)** |
-| Lint | ⚠️ Not run — ESLint is not installed |
-| Expo export / production bundle | ⚠️ Not yet run |
+| `npx expo lint` | ✅ **Clean (0 errors, 0 warnings)** |
+| `npx expo-doctor` | ✅ **20/20 checks passed** |
+| Content integrity check | ✅ **36 plates, 8 guides, 6 collections** |
+| Expo export / production bundle (iOS) | ✅ **Bundles clean (7.9 MB hbc, 4440 modules)** |
 | On-device QA | ❌ Not yet done |
 
-**Bottom line:** the app is feature-complete in code and typechecks. It has not been run on a device or exported. The next session should be almost entirely verification and polish, not feature work.
+**Bottom line:** the app is feature-complete, typechecks, lints, bundles, and passes expo-doctor.
+It has not been run on a device yet, so the next session is visual QA and feel — not feature work.
 
 ---
 
@@ -39,8 +42,11 @@ This file is the single source of truth for resuming work. Read the **Status** a
 # from C:\Users\Narwal\Desktop\pos
 npx expo start -c        # clear Metro cache; open in Expo Go
 npx tsc --noEmit         # typecheck
+npx expo lint            # eslint (flat config in eslint.config.js)
 npx expo export --platform ios   # production bundle sanity check
 npx expo-doctor          # dependency / config sanity check
+npx tsx scripts/check-content.mjs        # content integrity
+npx tsx scripts/preview-poses.mjs        # art contact sheets → design/
 ```
 
 Use `npx`, not `npm install`, for Expo packages: `npx expo install <pkg>`.
@@ -243,21 +249,24 @@ A preview of three mark options is in `design/brand/icon-{a,b,c}.png` (A was cho
 - [ ] Large-font / Dynamic Type pass; long position titles (`numberOfLines` already used in cards).
 - [ ] Reduced-motion: breathing art and `Reveal` should settle.
 
-### 6.2 Build verification
+### 6.2 Build verification — done
 
-- [ ] `npx tsc --noEmit` — currently clean, re-run after any edit.
-- [ ] `npx expo export --platform ios` — not yet run; this is the real bundling check.
-- [ ] `npx expo-doctor` — not yet run.
-- [ ] Lint: `npx expo lint` will offer to install ESLint. Decide and commit a config if desired.
+- [x] `npx tsc --noEmit` — clean.
+- [x] `npx expo lint` — clean; flat config at `eslint.config.js` (`eslint-config-expo/flat`, ignores `dist/`, `design/`, `scripts/`).
+- [x] `npx expo export --platform ios` — succeeds; 4440 modules, 7.9 MB Hermes bundle.
+- [x] `npx expo-doctor` — 20/20 checks pass.
+- [x] `npx tsx scripts/check-content.mjs` — every plate has art, every collection reference resolves, numbering is continuous.
+- [ ] Re-run all of the above after any edit.
 
 ### 6.3 Polish / optional
 
-- [ ] Device-tune the weakest plates (`the-shell` first) with `scripts/preview-poses.mjs`.
+- [ ] Device-tune the weakest plates (`the-shell` first) with `scripts/preview-poses.mjs`. The art has never been reviewed on a device, only as rendered contact sheets.
 - [ ] Confirm Skia plate performance while scrolling the 36-item atlas (paths are cached, but measure).
-- [ ] Add a `README.md` for humans (this file is the working handoff).
-- [ ] Store framing: 17+ age rating copy / privacy policy text (“local only, no accounts, no analytics”).
-- [ ] Remove unused dependencies if you want a leaner bundle: `@gorhom/bottom-sheet`, `@expo/ui`, `expo-device`, `expo-glass-effect`, `expo-image`, `expo-linear-gradient`, `expo-symbols`, `expo-web-browser`, `@shopify/flash-list`, `react-native-svg`. Nothing currently depends on them. `react-native-svg` may be pulled transitively; verify before removing.
-- [ ] Delete the now-unused `assets/expo.icon/` directory.
+- [ ] Store framing: app-store description, 18+ rating answers, and a hosted privacy-policy page (the in-app copy already says “local only, no accounts, no analytics”).
+- [x] `README.md` written for humans.
+- [x] Unused dependencies removed: `@expo/ui`, `@gorhom/bottom-sheet`, `@shopify/flash-list`, `expo-device`, `expo-glass-effect`, `expo-image`, `expo-linear-gradient`, `expo-symbols`, `expo-web-browser`, `expo-blur`. `react-native-svg` is **kept** — it is a required peer of `lucide-react-native`.
+- [x] Deleted `assets/expo.icon/` and the template images (`expo-badge*`, `expo-logo`, `logo-glow`, `react-logo*`, `tutorial-web`).
+- [x] `design/` is git-ignored (8.8 MB of generated QA sheets).
 
 ### 6.4 Known risks to check first
 
@@ -267,6 +276,14 @@ A preview of three mark options is in `design/brand/icon-{a,b,c}.png` (A was cho
 4. **`max-w-[…ch]`** is silently dropped by react-native-css. Use px only (this was already fixed in the placeholder).
 5. **Modal + root protection** — resetting the age gate from Settings flips `ageVerified` to false while inside a protected modal. The navigator should auto-redirect to `index` → `/age`; verify there is no crash on the way out.
 6. **Hydration flash** — the root hides the stack until both stores hydrate. If a screen ever appears before hydration on a cold start, the guard in `_layout.tsx` is the place to fix it.
+
+### 6.5 Fixed in the verification pass
+
+- **Plate bodies painted the wrong ground.** `PoseArt` filled each figure with `colors.paper`, but every plate is mounted on a `bg-surface` card, so each body would have shown as a visible paper-coloured blob (much more obvious in dark mode). The default ground is now `colors.surface`; pass `ground` explicitly if a plate is ever mounted on a different background.
+- **Collection preview overflowed narrow screens.** Three fixed 96 px plates (304 px + gaps) overflowed a 320 px phone. They are now `flex-1` squares.
+- **Collection membership drifted.** 29 positions claimed collections that did not list them back. `collections.ts` is now the single source of truth; `scripts/reconcile-collections.mjs` rewrites each position's `collections` array to match, and `scripts/check-content.mjs` fails the build if they diverge again. Three plates (`threshold`, `the-compass`, `the-anchor`) were added to Foundations / Close & quiet / Strength & trust so that every plate belongs to at least one path.
+- **Lint configured.** `eslint.config.js` (flat) + `eslint`/`eslint-config-expo` dev dependencies; the codebase is clean.
+- **Onboarding step wrapper** no longer forces `flex: 1` inside a ScrollView, which could clip tall steps on small phones.
 
 ---
 
@@ -310,11 +327,10 @@ Dark equivalents live in `src/theme/tokens.ts`.
 
 Paste this to resume:
 
-> Continue FORMA in `C:\Users\Narwal\Desktop\pos`. Read `HANDOFF.md` first. The app is feature-complete and `npx tsc --noEmit` passes. Your job is verification and polish only:
-> 1. Run `npx expo export --platform ios`, `npx expo-doctor`, and fix anything they report.
-> 2. Audit the screens for NativeWind class conflicts, dark-mode contrast, safe areas, and accessibility labels.
+> Continue FORMA in `C:\Users\Narwal\Desktop\pos`. Read `HANDOFF.md` first. The app is feature-complete; `npx tsc --noEmit`, `npx expo lint`, `npx expo export --platform ios`, `npx expo-doctor` and `npx tsx scripts/check-content.mjs` all pass. Your job is device QA and polish only:
+> 1. Run the app in Expo Go and walk the flow in §6.1; fix what you actually see.
+> 2. Do the dark-mode and Dynamic Type pass on a real device.
 > 3. Fix the `the-shell` plate using `npx tsx scripts/preview-poses.mjs` for visual QA.
-> 4. Add a human `README.md` and store-framing/privacy copy.
 > Do not rewrite working screens; make targeted edits only.
 
 ---
@@ -339,6 +355,10 @@ src/components/nav/          floating-tab-bar.tsx
 src/app/                     routes (see §4)
 scripts/preview-poses.mjs    art QA contact sheets → design/
 scripts/build-brand-assets.mjs  icon/splash/favicon generation
-design/                      pose sheets, per-plate renders, brand options (not shipped)
+scripts/check-content.mjs    content integrity check (plates, guides, collections)
+scripts/reconcile-collections.mjs  sync position.collections with collections.ts
+scripts/icon-options.mjs     the three mark options (design/brand)
+eslint.config.js             flat ESLint config (eslint-config-expo)
+design/                      pose sheets, per-plate renders, brand options (git-ignored)
 assets/images/               shipped icons and splash marks
 ```

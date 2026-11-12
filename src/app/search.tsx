@@ -14,7 +14,7 @@ import { useTheme } from '@/theme/ThemeProvider';
 
 const suggestions = ['consent', 'slow', 'wall', 'beginner', 'oral', 'side lying'];
 
-const groups: Array<{ kind: SearchHit['kind']; label: string }> = [
+const groups: { kind: SearchHit['kind']; label: string }[] = [
   { kind: 'position', label: 'Plates' },
   { kind: 'guide', label: 'Guides' },
   { kind: 'collection', label: 'Collections' },

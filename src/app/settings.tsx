@@ -20,7 +20,7 @@ import { layout } from '@/theme/scale';
 import { palettes, type AccentEdition } from '@/theme/tokens';
 import { useTheme } from '@/theme/ThemeProvider';
 
-const themeOptions: Array<{ value: ThemePreference; label: string }> = [
+const themeOptions: { value: ThemePreference; label: string }[] = [
   { value: 'system', label: 'System' },
   { value: 'light', label: 'Light' },
   { value: 'dark', label: 'Dark' },

@@ -70,8 +70,8 @@ export default function CollectionScreen() {
           {preview.map((position) => (
             <View
               key={position.slug}
-              className="overflow-hidden rounded-card border border-line bg-surface">
-              <PoseArt pose={position.pose} size={96} />
+              className="flex-1 overflow-hidden rounded-card border border-line bg-surface">
+              <PoseArt pose={position.pose} />
             </View>
           ))}
         </View>

@@ -14,7 +14,7 @@ import { layout } from '@/theme/scale';
 
 type Filter = 'all' | 'slow' | 'steady' | 'playful' | 'low';
 
-const FILTERS: Array<{ id: Filter; label: string }> = [
+const FILTERS: { id: Filter; label: string }[] = [
   { id: 'all', label: 'All' },
   { id: 'slow', label: 'Slow' },
   { id: 'steady', label: 'Steady' },

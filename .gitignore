@@ -21,6 +21,9 @@ expo-env.d.ts
 # Metro
 .metro-health-check*
 
+# Generated art QA sheets and brand explorations (regenerate with scripts/)
+design/
+
 # debug
 npm-debug.*
 yarn-debug.*

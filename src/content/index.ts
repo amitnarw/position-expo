@@ -57,7 +57,7 @@ export function search(query: string, limit = 24): SearchHit[] {
   const q = query.trim().toLowerCase();
   if (!q) return [];
 
-  const scored: Array<{ hit: SearchHit; score: number }> = [];
+  const scored: { hit: SearchHit; score: number }[] = [];
 
   const push = (hit: SearchHit, haystack: string, weight: number) => {
     const index = haystack.toLowerCase().indexOf(q);

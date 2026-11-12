@@ -219,7 +219,7 @@ export function figureShapes(figure: Figure, pad = 0): string[] {
   };
 
   // Legs sit behind the torso mass.
-  const legs: Array<[Point, Point] | undefined> = [figure.legA, figure.legB];
+  const legs: ([Point, Point] | undefined)[] = [figure.legA, figure.legB];
   const usedHips = new Set<number>();
   for (const leg of legs) {
     if (!leg) continue;
@@ -259,7 +259,7 @@ export function figureShapes(figure: Figure, pad = 0): string[] {
   );
 
   // Arms sit in front of the torso mass.
-  const arms: Array<[Point, Point] | undefined> = [figure.armA, figure.armB];
+  const arms: ([Point, Point] | undefined)[] = [figure.armA, figure.armB];
   const usedShoulders = new Set<number>();
   for (const arm of arms) {
     if (!arm) continue;

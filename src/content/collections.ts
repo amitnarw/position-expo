@@ -6,7 +6,7 @@ export const collections: Collection[] = [
     title: 'Foundations',
     subtitle: 'Start here',
     intro:
-      'Eight plates that ask very little and teach the most. If you are new to this, or coming back after a long time away, work through these before anything else.',
+      'Plates that ask very little and teach the most. If you are new to this, or coming back after a long time away, work through these before anything else.',
     positions: [
       'first-light',
       'the-tide',
@@ -16,6 +16,7 @@ export const collections: Collection[] = [
       'the-chair',
       'the-crossing',
       'the-gift',
+      'threshold',
     ],
   },
   {
@@ -33,6 +34,7 @@ export const collections: Collection[] = [
       'first-light',
       'the-sling',
       'the-corridor',
+      'the-compass',
     ],
   },
   {
@@ -84,6 +86,7 @@ export const collections: Collection[] = [
       'the-plunge',
       'the-ladder',
       'the-reach',
+      'the-anchor',
     ],
   },
   {

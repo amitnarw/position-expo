@@ -73,7 +73,7 @@ export const positions: Position[] = [
       'Sit up on one elbow for more room to move the hips.',
       'Try it facing the other way, with the back partner on the other side.',
     ],
-    collections: ['foundations', 'close', 'slow'],
+    collections: ['foundations', 'close'],
   },
   {
     slug: 'two-vessels',
@@ -108,7 +108,7 @@ export const positions: Position[] = [
       'Sit back to back and take turns leaning, for a slower, weight-sharing version.',
       'Turn it into a hug: arms around the shoulders, no movement at all.',
     ],
-    collections: ['foundations', 'close', 'slow'],
+    collections: ['foundations'],
   },
   {
     slug: 'the-lean',
@@ -143,7 +143,7 @@ export const positions: Position[] = [
       'Use a stack of pillows behind the shoulders if the wall is cold or rough.',
       'Move to a doorway and hold both sides of the frame for a playful, lifted version.',
     ],
-    collections: ['foundations', 'play'],
+    collections: ['play'],
   },
   {
     slug: 'aloft',
@@ -178,7 +178,7 @@ export const positions: Position[] = [
       'Both partners kneel upright and hold each other for a close, rocking version.',
       'The lower partner sits up on their elbows to reach and kiss.',
     ],
-    collections: ['foundations', 'play'],
+    collections: ['play'],
   },
   {
     slug: 'half-turn',
@@ -248,7 +248,7 @@ export const positions: Position[] = [
       'The lower partner holds their knees to their chest for a compact version.',
       'Try it at the edge of the bed with the upper partner standing.',
     ],
-    collections: ['slow', 'further'],
+    collections: ['further'],
   },
   {
     slug: 'the-current',
@@ -283,7 +283,7 @@ export const positions: Position[] = [
       'Both partners roll slightly forward so the chests touch.',
       'Try it with one partner’s top leg hooked over the other’s hip.',
     ],
-    collections: ['foundations', 'close', 'slow'],
+    collections: ['foundations', 'close'],
   },
   {
     slug: 'threshold',
@@ -318,7 +318,7 @@ export const positions: Position[] = [
       'Use a chair or sofa instead of a bed for a lower, more relaxed height.',
       'Add a pillow under the hips for a different angle.',
     ],
-    collections: ['foundations', 'play'],
+    collections: ['foundations'],
   },
   {
     slug: 'the-chair',
@@ -353,7 +353,7 @@ export const positions: Position[] = [
       'The seated partner leans back against a wall for a more reclined version.',
       'Try a low armchair where both partners can sink in.',
     ],
-    collections: ['foundations', 'close'],
+    collections: ['foundations'],
   },
   {
     slug: 'the-fold',
@@ -423,7 +423,7 @@ export const positions: Position[] = [
       'Raise one hip with an extra pillow for a slight twist.',
       'The upper partner lies fully along the back for maximum contact.',
     ],
-    collections: ['close', 'slow'],
+    collections: ['slow'],
   },
   {
     slug: 'the-compass',
@@ -458,7 +458,7 @@ export const positions: Position[] = [
       'Turn further to face away completely.',
       'Try it on a firm cushion on the floor rather than a soft mattress.',
     ],
-    collections: ['foundations', 'close'],
+    collections: ['close'],
   },
   {
     slug: 'the-ladder',
@@ -528,7 +528,7 @@ export const positions: Position[] = [
       'Both partners lie on their sides, crosswise, for a roomier version of The Current.',
       'Move to the floor with a thick blanket for a firmer surface.',
     ],
-    collections: ['foundations', 'close'],
+    collections: ['foundations'],
   },
   {
     slug: 'the-anchor',
@@ -563,7 +563,7 @@ export const positions: Position[] = [
       'Both partners kneel instead of standing.',
       'The front partner stands upright and is held from behind, no wall needed.',
     ],
-    collections: ['foundations', 'close'],
+    collections: ['strength'],
   },
   {
     slug: 'the-reach',
@@ -598,7 +598,7 @@ export const positions: Position[] = [
       'The standing partner sits on a stool at the right height.',
       'The kneeling partner rests their forearms on the bed.',
     ],
-    collections: ['foundations', 'play'],
+    collections: ['strength'],
   },
   {
     slug: 'the-sling',
@@ -668,7 +668,7 @@ export const positions: Position[] = [
       'Both partners curl the other way, facing each other.',
       'Bring the front partner’s knees up higher for a tighter nest.',
     ],
-    collections: ['close', 'slow'],
+    collections: ['close'],
   },
   {
     slug: 'the-nest',
@@ -703,7 +703,7 @@ export const positions: Position[] = [
       'Lean forward together and add a slow rock.',
       'Turn the front partner slightly sideways for a different angle.',
     ],
-    collections: ['close', 'slow'],
+    collections: ['close'],
   },
   {
     slug: 'the-cradle',
@@ -738,7 +738,7 @@ export const positions: Position[] = [
       'Try it kneeling, with the held partner in the lap.',
       'The held partner leans back and lets their partner hold them.',
     ],
-    collections: ['play', 'strength'],
+    collections: ['strength'],
   },
   {
     slug: 'the-hush',
@@ -843,7 +843,7 @@ export const positions: Position[] = [
       'One partner lies on their back and the other drapes across them.',
       'Add a blanket over both of you.',
     ],
-    collections: ['play', 'close'],
+    collections: ['play', 'further'],
   },
   {
     slug: 'the-pillar',
@@ -878,7 +878,7 @@ export const positions: Position[] = [
       'Lower them onto a bed edge when you need to stop.',
       'Try a half-lift, with the held partner standing on one leg.',
     ],
-    collections: ['strength', 'play'],
+    collections: ['strength'],
   },
   {
     slug: 'the-ledge',
@@ -948,7 +948,7 @@ export const positions: Position[] = [
       'Try it on the floor with a padded mat.',
       'The upper partner holds their own thighs instead of being held.',
     ],
-    collections: ['strength', 'play'],
+    collections: ['strength'],
   },
   {
     slug: 'the-plunge',
@@ -1018,7 +1018,7 @@ export const positions: Position[] = [
       'The lower partner crosses their ankles to take the weight off.',
       'Lower the legs and finish side by side.',
     ],
-    collections: ['strength', 'slow'],
+    collections: ['slow', 'strength'],
   },
   {
     slug: 'the-corridor',
@@ -1053,7 +1053,7 @@ export const positions: Position[] = [
       'Turn the wall partner to face the wall.',
       'Drop to kneeling together and keep everything else the same.',
     ],
-    collections: ['close', 'play'],
+    collections: ['close'],
   },
   {
     slug: 'the-mirror',
@@ -1088,7 +1088,7 @@ export const positions: Position[] = [
       'Try it standing.',
       'Use a phone camera instead, if you both prefer the distance.',
     ],
-    collections: ['further', 'play'],
+    collections: ['play', 'further'],
   },
   {
     slug: 'the-riddle',
@@ -1123,7 +1123,7 @@ export const positions: Position[] = [
       'The receiving partner sits at the edge of the bed instead.',
       'Add hands for a faster, lighter version.',
     ],
-    collections: ['close', 'slow'],
+    collections: ['slow'],
   },
   {
     slug: 'the-gift',
@@ -1158,7 +1158,7 @@ export const positions: Position[] = [
       'Use a toy, alone or together.',
       'Try it fully clothed, as a way to slow everything down.',
     ],
-    collections: ['foundations', 'close'],
+    collections: ['foundations'],
   },
   {
     slug: 'the-crossing',
@@ -1193,7 +1193,7 @@ export const positions: Position[] = [
       'Sit on a low cushion to change the height.',
       'Hold each other’s forearms instead of leaning on your hands.',
     ],
-    collections: ['foundations', 'slow'],
+    collections: ['foundations'],
   },
   {
     slug: 'the-descent',
@@ -1228,7 +1228,7 @@ export const positions: Position[] = [
       'Lower all the way to flat and continue into the first plate.',
       'Use a wedge cushion to make rising easier.',
     ],
-    collections: ['close', 'slow'],
+    collections: ['slow'],
   },
   {
     slug: 'the-blank-page',
@@ -1263,6 +1263,6 @@ export const positions: Position[] = [
       'Pick two plates and move between them slowly.',
       'Invent a shape that is not here and add it to your own list.',
     ],
-    collections: ['further', 'play'],
+    collections: ['play', 'further'],
   },
 ];
