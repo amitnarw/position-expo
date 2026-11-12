@@ -19,20 +19,21 @@ This file is the single source of truth for resuming work. Read the **Status** a
 | Persistence (settings + library) | ✅ Done |
 | UI primitives | ✅ Done |
 | Navigation shell + protected routes | ✅ Done |
-| Age gate + onboarding | ✅ Done |
+| Age gate (hidden behind feature flag `ageGate: false`) | ✅ Wired, not shown |
+| Intro flow: primer + how-to-read walkthrough | ✅ Done |
 | Today / Atlas / Learn / Saved tabs | ✅ Done |
 | Plate / Guide / Collection detail modals | ✅ Done |
 | Search + Settings modals | ✅ Done |
+| Ad layer: mock provider, AdMob test units, connectivity gate | ✅ Done |
 | Brand assets (icon, splash, adaptive, favicon) | ✅ Generated |
 | `npx tsc --noEmit` | ✅ **Clean (0 errors)** |
 | `npx expo lint` | ✅ **Clean (0 errors, 0 warnings)** |
 | `npx expo-doctor` | ✅ **20/20 checks passed** |
 | Content integrity check | ✅ **36 plates, 8 guides, 6 collections** |
-| Expo export / production bundle (iOS) | ✅ **Bundles clean (7.9 MB hbc, 4440 modules)** |
+| Expo export / production bundle (iOS) | ✅ **Bundles clean** |
 | On-device QA | ❌ Not yet done |
 
-**Bottom line:** the app is feature-complete, typechecks, lints, bundles, and passes expo-doctor.
-It has not been run on a device yet, so the next session is visual QA and feel — not feature work.
+**Bottom line:** the app is feature-complete, typechecks, lints, bundles, and passes expo-doctor. The ad/connectivity layer is wired behind feature flags with the mock provider as dev default. It has not been run on a device yet.
 
 ---
 
@@ -40,13 +41,18 @@ It has not been run on a device yet, so the next session is visual QA and feel �
 
 ```bash
 # from C:\Users\Narwal\Desktop\pos
-npx expo start -c        # clear Metro cache; open in Expo Go
+npx expo start -c        # clear Metro cache; open in Expo Go (dev build needed for ads)
 npx tsc --noEmit         # typecheck
 npx expo lint            # eslint (flat config in eslint.config.js)
 npx expo export --platform ios   # production bundle sanity check
 npx expo-doctor          # dependency / config sanity check
 npx tsx scripts/check-content.mjs        # content integrity
 npx tsx scripts/preview-poses.mjs        # art contact sheets → design/
+
+# Ad testing (dev build):
+# 1. eas build --profile development   (native modules required)
+# 2. Open on device; toggle airplane mode to test the connectivity gate
+# 3. Dev-only Ads panel in Settings: force fill / no-fill / replay / reset caps
 ```
 
 Use `npx`, not `npm install`, for Expo packages: `npx expo install <pkg>`.
@@ -93,10 +99,13 @@ Error: failed to deserialize; expected an object-like struct named Specifier, fo
 
 ```
 src/app/
-├── _layout.tsx              Root stack, fonts, splash, hydration gate, Stack.Protected
-├── index.tsx                Pure redirect gate: /age → /onboarding → /today
-├── age.tsx                  18+ gate (outside protected app group)
+├── _layout.tsx              Root stack, fonts, splash, hydration gate, OnlineGate,
+│                            InterstitialHost, Stack.Protected
+├── index.tsx                Pure redirect gate: /onboarding → /primer → /today
+├── age.tsx                  18+ gate (hidden behind features.ageGate = false)
 ├── onboarding.tsx            3-step intent/comfort flow
+├── primer.tsx               Intro: what this is / isn't
+├── how-to-read/[step].tsx   2-step plate-notation walkthrough
 ├── (tabs)/
 │   ├── _layout.tsx           JS Tabs + custom floating pill bar
 │   ├── today.tsx             Hero plate, greeting, return row, 4-plate grid, collections, guide
@@ -107,15 +116,16 @@ src/app/
 ├── guide/[slug].tsx          Guide detail (modal)
 ├── collection/[slug].tsx     Collection detail (modal)
 ├── search.tsx                Search modal
-└── settings.tsx              Settings modal
+└── settings.tsx              Settings modal (+ dev Ads panel)
 ```
 
-Protection model:
+Protection model (feature-flag driven):
 
-- `!ageVerified` → only `age` is available.
-- `ageVerified && !onboarded` → only `onboarding`.
-- `ageVerified && onboarded` → `(tabs)` + all modals.
-- `index` is always registered and redirects with `<Redirect />`.
+- `features.ageGate && !ageVerified` → `age` screen (flag is **false** by default; gate hidden).
+- `!onboarded` → `onboarding`.
+- `onboarded && !introDone` → `primer` then `how-to-read/[step]`.
+- `onboarded && introDone` → `(tabs)` + all modals.
+- `index` always registered; redirects to the first applicable destination.
 
 Modal screens render their own headers (`headerShown: false` globally).
 
@@ -204,6 +214,41 @@ Shared content components:
 - `src/components/content/modal-header.tsx` — shared modal top bar.
 - `src/components/content/editorial.tsx` — `SectionTitle`, `NumberedSteps`, `BulletList`, `NoteCard`.
 
+### Ad layer
+
+`src/ads/`: provider-agnostic ad abstraction so the app works with any network.
+
+- `src/ads/types.ts` — `AdProvider` interface, `AdOutcome` discriminated union, `AdCaps`.
+- `src/ads/config.ts` — `adConfig` from `app.config.ts` `extra.ads`; sandbox `admobTestUnits` (AdMob test IDs — never real account IDs).
+- `src/ads/adManager.ts` — provider selection, per-session caps (interstitial cap per session, never first-open), `useInterstitial` hook.
+- `src/ads/mock.ts` — local mock provider (dev default): simulated fill/no-fill/latency, logs impressions to console and `window.__AD_IMPRESSIONS__`.
+- `src/ads/admob.tsx` — AdMob provider using sandbox test units via the imperative `createForAdRequest` API.
+- `src/components/ads/AdSlot.tsx` — fixed-height banner slot (52 px), reserved space whether or not a creative loads.
+- `src/components/ads/InterstitialHost.tsx` — root-mounted interstitial host; renders mock overlay in dev, native interstitials in production.
+
+**Connectivity gate** (`src/net/`): `useOnline()` wraps `expo-network`'s `useNetworkState`/`getNetworkStateAsync`. The gate uses `isInternetReachable` (not `isConnected`, which is true on dead/captive-portal Wi-Fi). Cold start shows a "Checking connection…" loader; offline shows a full-screen offline state with Retry. App is only usable once internet is reachable.
+
+Feature flags (`src/config/features.ts`):
+
+| Flag | Default | Purpose |
+|---|---|---|
+| `ageGate` | `false` | Show 18+ gate before onboarding |
+| `introPrimer` | `true` | Show "what this is / isn't" primer |
+| `introHowToRead` | `true` | Show plate-notation walkthrough |
+| `interstitialAds` | `true` | Show interstitials at natural breaks |
+| `bannerAds` | `true` | Show banners on Atlas / Learn |
+| `rewardedAds` | `true` | Rewarded ad to unlock a collection early |
+
+**Important:** AdMob test units only ever serve test creatives and pay nothing. For production revenue, swap `provider` to `'webview'` (tag-based network) and add real zone IDs — but ad creatives must be SFW for store distribution (see known risk below).
+
+**Known risks:**
+
+1. **Ad policy:** This app's subject matter is sexual-wellness/education. AdMob prohibits sexual content — that's why the dev default is the mock provider and test units only. A production ad network must be adult-tolerant *and* serve SFW creatives to survive store review. Adult creatives inside a store-distributed app will get rejected or pulled.
+2. **"No tracking" copy:** The age-gate footer, About section, README, and HANDOFF still claim "no tracking." Ad SDKs collect device/ad IDs, so that copy must be rewritten before any ad network is enabled, plus a Play Data Safety form and a hosted privacy page.
+3. **Expo Go no longer runs the app:** `react-native-google-mobile-ads` is a native module, so `expo-dev-client` + EAS dev builds are required once the ad layer is wired. `npx expo start` alone will fail.
+4. **Connectivity gate:** If `isInternetReachable` is flaky on a user's network, they're locked out. The gate shows a brief loader on cold start and retries on listener changes; test on real 4G/5G and captive portals.
+5. **Hydration flash:** the root hides the stack until both stores hydrate. If a screen appears before hydration on cold start, the guard in `_layout.tsx` is the place to fix it.
+
 ---
 
 ## 5. Brand assets
@@ -235,9 +280,12 @@ A preview of three mark options is in `design/brand/icon-{a,b,c}.png` (A was cho
 
 ### 6.1 Verification (highest priority)
 
-- [ ] `npx expo start -c` and open in Expo Go on a physical device.
-- [ ] Walk the full gate: splash → age (18+) → onboarding (intent + comfort) → Today.
-- [ ] Kill and relaunch the app: verify age/onboarding/favourites/history persist.
+- [ ] `npx expo start -c` and open in Expo Go on a physical device (dev build required for ads module).
+- [ ] Walk the full gate: splash → connectivity check → onboarding → primer → how-to-read → Today. (Age gate hidden behind `features.ageGate: false`.)
+- [ ] Toggle airplane mode mid-session: offline state shows, Retry works, reconnect restores access.
+- [ ] Kill and relaunch: verify onboarding/intro flags persist; intro only shows once.
+- [ ] Dev-only Ads panel in Settings: force fill / no-fill / replay interstitial / reset caps / impression counter.
+- [ ] Test interstitial frequency cap (3 per session, never first-open) and app-open ad.
 - [ ] Check the custom pill tab bar on a device with a home indicator (iPhone) **and** Android.
 - [ ] Atlas: all filters, grid cell widths on a small phone (iPhone SE) and a tablet, empty state.
 - [ ] Plate modal: art size, favourite toggle + persistence, recordView/history, prev/next.
@@ -328,9 +376,10 @@ Dark equivalents live in `src/theme/tokens.ts`.
 Paste this to resume:
 
 > Continue FORMA in `C:\Users\Narwal\Desktop\pos`. Read `HANDOFF.md` first. The app is feature-complete; `npx tsc --noEmit`, `npx expo lint`, `npx expo export --platform ios`, `npx expo-doctor` and `npx tsx scripts/check-content.mjs` all pass. Your job is device QA and polish only:
-> 1. Run the app in Expo Go and walk the flow in §6.1; fix what you actually see.
-> 2. Do the dark-mode and Dynamic Type pass on a real device.
-> 3. Fix the `the-shell` plate using `npx tsx scripts/preview-poses.mjs` for visual QA.
+> 1. Run the app in a dev build and walk the flow in §6.1; fix what you actually see.
+> 2. Test the connectivity gate (airplane mode / captive portal) and the ad dev panel (fill/no-fill/caps).
+> 3. Do the dark-mode and Dynamic Type pass on a real device.
+> 4. Fix the `the-shell` plate using `npx tsx scripts/preview-poses.mjs` for visual QA.
 > Do not rewrite working screens; make targeted edits only.
 
 ---
@@ -338,10 +387,15 @@ Paste this to resume:
 ## 9. File index
 
 ```
-app.json                     Expo config (icon, splash, typed routes, React Compiler)
+app.config.ts                Expo config (icon, splash, typed routes, React Compiler, ad extra)
 package.json                 SDK 58 deps + lightningcss override
 metro.config.js              NativeWind + runtime CSS var exclusions
+eslint.config.js             flat ESLint config (eslint-config-expo)
 src/global.css               Tailwind theme + tokens
+src/config/                  features.ts
+src/net/                     useOnline.ts, OnlineGate.tsx
+src/ads/                     types.ts, config.ts, adManager.ts, mock.tsx, admob.tsx
+src/components/ads/          AdSlot.tsx, InterstitialHost.tsx
 src/theme/                   tokens.ts, ThemeProvider.tsx, fonts.ts, scale.ts
 src/store/                   settings.ts, library.ts
 src/lib/                     cn.ts, color.ts, haptics.ts
@@ -358,7 +412,6 @@ scripts/build-brand-assets.mjs  icon/splash/favicon generation
 scripts/check-content.mjs    content integrity check (plates, guides, collections)
 scripts/reconcile-collections.mjs  sync position.collections with collections.ts
 scripts/icon-options.mjs     the three mark options (design/brand)
-eslint.config.js             flat ESLint config (eslint-config-expo)
 design/                      pose sheets, per-plate renders, brand options (git-ignored)
 assets/images/               shipped icons and splash marks
 ```
