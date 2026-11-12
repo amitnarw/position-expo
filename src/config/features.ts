@@ -15,8 +15,6 @@ export const features = {
   interstitialAds: true,
   /** Show banner ads on Atlas / Learn. */
   bannerAds: true,
-  /** Show rewarded ads to unlock a collection early. */
-  rewardedAds: true,
 } as const;
 
 export type FeatureKey = keyof typeof features;

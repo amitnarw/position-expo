@@ -15,6 +15,7 @@ type SettingsState = {
   ageVerified: boolean;
   onboarded: boolean;
   introDone: boolean;
+  adsConsented: boolean;
   intent: Intent | null;
   comfort: Comfort | null;
   theme: ThemePreference;
@@ -23,6 +24,7 @@ type SettingsState = {
   verifyAge: () => void;
   completeOnboarding: (input: { intent: Intent; comfort: Comfort }) => void;
   setIntroDone: () => void;
+  setAdsConsented: (consented: boolean) => void;
   setTheme: (theme: ThemePreference) => void;
   setEdition: (edition: AccentEdition) => void;
   setHaptics: (enabled: boolean) => void;
@@ -35,6 +37,7 @@ const defaults = {
   ageVerified: false,
   onboarded: false,
   introDone: false,
+  adsConsented: false,
   intent: null,
   comfort: null,
   theme: 'system' as ThemePreference,
@@ -49,12 +52,13 @@ export const useSettings = create<SettingsState>()(
       hydrated: false,
       verifyAge: () => set({ ageVerified: true }),
       completeOnboarding: ({ intent, comfort }) =>
-        set({ intent, comfort, onboarded: true, introDone: false }),
+        set({ intent, comfort, onboarded: true, introDone: false, adsConsented: false }),
       setIntroDone: () => set({ introDone: true }),
+      setAdsConsented: (consented: boolean) => set({ adsConsented: consented }),
       setTheme: (theme) => set({ theme }),
       setEdition: (edition) => set({ edition }),
       setHaptics: (haptics) => set({ haptics }),
-      personalizeAgain: () => set({ onboarded: false, introDone: false }),
+      personalizeAgain: () => set({ onboarded: false, introDone: false, adsConsented: false }),
       resetAll: () => {
         void Storage.removeItem(SETTINGS_KEY);
         set({ ...defaults, hydrated: true, ageVerified: false });

@@ -76,7 +76,7 @@ export default function AgeScreen() {
             </View>
 
             <AppText variant="small" className="mt-5 text-center">
-              Local only · No account · No tracking
+              Educational for adults · No account
             </AppText>
           </View>
         </View>

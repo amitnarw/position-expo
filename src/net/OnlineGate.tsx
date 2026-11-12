@@ -44,9 +44,9 @@ export function OnlineGate({ online, onRetry }: { online: boolean | null; onRetr
           className="w-[200px]"
         />
         <Rule className="mt-12 mb-4 w-[200px]" />
-        <AppText variant="small" className="text-center">
-          Local data (favourites, history, settings) still works offline — just not while we are
-          verifying the connection.
+        <AppText variant="small" className="text-center max-w-[260px]">
+          FORMA needs an internet connection to load plates and guides. Your favourites and history
+          are stored on your device, but FORMA only works once you are online.
         </AppText>
       </View>
     </Screen>

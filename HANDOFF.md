@@ -24,7 +24,14 @@ This file is the single source of truth for resuming work. Read the **Status** a
 | Today / Atlas / Learn / Saved tabs | ✅ Done |
 | Plate / Guide / Collection detail modals | ✅ Done |
 | Search + Settings modals | ✅ Done |
-| Ad layer: mock provider, AdMob test units, connectivity gate | ✅ Done |
+| Ad layer: banners on Atlas/Learn, capped interstitials, consent-gated, ATT | ✅ Done (test units only) |
+| Connectivity gate (`isInternetReachable`) | ✅ Done |
+| Privacy policy + ads consent + rewritten "no tracking" copy | ✅ Done |
+| Age gate (hidden behind feature flag `ageGate: false`) | ✅ Wired, not shown |
+| Intro flow: primer + how-to-read walkthrough | ✅ Done |
+| Today / Atlas / Learn / Saved tabs | ✅ Done |
+| Plate / Guide / Collection detail modals | ✅ Done |
+| Search + Settings modals | ✅ Done |
 | Brand assets (icon, splash, adaptive, favicon) | ✅ Generated |
 | `npx tsc --noEmit` | ✅ **Clean (0 errors)** |
 | `npx expo lint` | ✅ **Clean (0 errors, 0 warnings)** |
@@ -32,8 +39,9 @@ This file is the single source of truth for resuming work. Read the **Status** a
 | Content integrity check | ✅ **36 plates, 8 guides, 6 collections** |
 | Expo export / production bundle (iOS) | ✅ **Bundles clean** |
 | On-device QA | ❌ Not yet done |
+| EAS dev build (`eas.json`, GMA app IDs, ATT) | ✅ Configured, not yet built |
 
-**Bottom line:** the app is feature-complete, typechecks, lints, bundles, and passes expo-doctor. The ad/connectivity layer is wired behind feature flags with the mock provider as dev default. It has not been run on a device yet.
+**Bottom line:** the app is feature-complete, typechecks, lints, bundles, and passes expo-doctor. Banners render on Atlas/Learn and interstitials are capped (3/session, never first-open), both gated behind user consent. The ad/connectivity layer uses the mock provider by default (dev) with AdMob test units available. It has not been run on a device yet; a dev build is required because `react-native-google-mobile-ads` and `expo-tracking-transparency` are native modules.
 
 ---
 
@@ -49,15 +57,21 @@ npx expo-doctor          # dependency / config sanity check
 npx tsx scripts/check-content.mjs        # content integrity
 npx tsx scripts/preview-poses.mjs        # art contact sheets → design/
 
-# Ad testing (dev build):
-# 1. eas build --profile development   (native modules required)
-# 2. Open on device; toggle airplane mode to test the connectivity gate
-# 3. Dev-only Ads panel in Settings: force fill / no-fill / replay / reset caps
+# Ad testing (dev build - required; Expo Go will NOT run the ad module):
+# 1. npx expo install expo-dev-client (done)
+# 2. eas build --profile development   (native modules: GMA + ATT)
+# 3. Open on device; toggle airplane mode to test the connectivity gate
+# 4. Turn ads on/off in Settings → About → Allow advertising
+# 5. Flip app.config.ts extra.ads.provider to 'admob' to test real test units
+
 ```
 
 Use `npx`, not `npm install`, for Expo packages: `npx expo install <pkg>`.
 
-The project uses Expo Go only. All chosen native modules (Skia, Reanimated, Gesture Handler, Screens, SQLite) ship in the Expo Go client for SDK 58.
+The project uses native modules (Skia, Reanimated, Gesture Handler, Screens, SQLite,
+`react-native-google-mobile-ads`, `expo-tracking-transparency`, `expo-dev-client`) that are NOT in
+the Expo Go client. A development build (`eas build --profile development`) is required to run and
+test the app on a device.
 
 ---
 

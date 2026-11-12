@@ -7,6 +7,7 @@ import { PlateCard } from '@/components/plates/plate-card';
 import { AppText } from '@/components/ui/app-text';
 import { Chip } from '@/components/ui/chip';
 import { Screen } from '@/components/ui/screen';
+import { AdSlot } from '@/components/ads/AdSlot';
 import { allPositions } from '@/content';
 import { haptics } from '@/lib/haptics';
 import { useTheme } from '@/theme/ThemeProvider';
@@ -110,6 +111,7 @@ export default function AtlasScreen() {
           </View>
         </View>
       )}
+      <AdSlot />
     </Screen>
   );
 }

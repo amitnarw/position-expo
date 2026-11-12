@@ -3,6 +3,7 @@ import { adConfig, type AdConfig } from './config';
 import { features } from '@/config/features';
 import { mockProvider } from './mock';
 import { admobProvider } from './admob';
+import { useSettings } from '@/store/settings';
 import type { AdProvider, AdOutcome, AdCaps } from './types';
 
 function resolveProvider(config: AdConfig): AdProvider {
@@ -51,8 +52,12 @@ export function recordBanner() {
   caps.bannerCount += 1;
 }
 
-export function canShowInterstitial({ firstOpen }: { firstOpen: boolean }): boolean {
+export function canShowInterstitial({
+  firstOpen,
+  adsConsented,
+}: { firstOpen: boolean; adsConsented: boolean }): boolean {
   if (!features.interstitialAds) return false;
+  if (!adsConsented) return false;
   if (firstOpen && !adConfig.interstitialOnFirstOpen) return false;
   if (caps.interstitialCount >= adConfig.interstitialCapPerSession) return false;
   return true;
@@ -73,13 +78,14 @@ export function getCaps(): AdCaps {
  */
 export function useInterstitial({ firstOpen }: { firstOpen: boolean }) {
   const [showing, setShowing] = useState(false);
+  const adsConsented = useSettings((state) => state.adsConsented);
 
   const show = useCallback(
     async (zoneId: string): Promise<AdOutcome> => {
       if (!provider) await initAds();
       const p = provider;
       if (!p) return { kind: 'error', zoneId, message: 'ads not initialized' };
-      if (!canShowInterstitial({ firstOpen })) {
+      if (!canShowInterstitial({ firstOpen, adsConsented })) {
         return { kind: 'capped', reason: firstOpen ? 'first-open' : 'frequency' };
       }
 
@@ -105,7 +111,7 @@ export function useInterstitial({ firstOpen }: { firstOpen: boolean }) {
         setShowing(false);
       }
     },
-    [firstOpen],
+    [firstOpen, adsConsented],
   );
 
   return { show, showing, caps: getCaps() };

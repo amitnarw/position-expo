@@ -41,7 +41,15 @@ const config: ExpoConfig = {
         },
       },
     ],
-    'react-native-google-mobile-ads',
+    [
+      'react-native-google-mobile-ads',
+      {
+        // Test app IDs — never real account IDs. Required by the GMA plugin.
+        androidAppId: 'ca-app-pub-3940256099942544~3347511713',
+        iosAppId: 'ca-app-pub-3940256099942544~1444665636',
+      },
+    ],
+    'expo-tracking-transparency',
   ],
   experiments: {
     typedRoutes: true,
@@ -53,7 +61,13 @@ const config: ExpoConfig = {
       // real AdMob test units, or 'webview' for a tag-based production network.
       provider: 'mock',
       testMode: true,
-      zones: {},
+      zones: {
+        // AdMob sandbox test unit IDs — test creatives only, never real account IDs.
+        appOpen: 'ca-app-pub-3940256099942544/5662997125',
+        interstitial: 'ca-app-pub-3940256099942544/1033173712',
+        banner: 'ca-app-pub-3940256099942544/6300978111',
+        rewarded: 'ca-app-pub-3940256099942544/5224354917',
+      },
       interstitialCapPerSession: 3,
       interstitialOnFirstOpen: false,
     },

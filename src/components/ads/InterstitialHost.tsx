@@ -8,6 +8,7 @@ import { Screen } from '@/components/ui/screen';
 import { useTheme } from '@/theme/ThemeProvider';
 import { features } from '@/config/features';
 import { registerInterstitialTrigger, getProvider, initAds } from '@/ads/adManager';
+import { useSettings } from '@/store/settings';
 import type { AdOutcome } from '@/ads/types';
 
 /**
@@ -20,6 +21,7 @@ import type { AdOutcome } from '@/ads/types';
  */
 export function InterstitialHost({ children }: { children: React.ReactNode }) {
   const { colors } = useTheme();
+  const adsConsented = useSettings((state) => state.adsConsented);
   const provider = getProvider();
   const isMock = provider?.name === 'mock';
 
@@ -31,6 +33,7 @@ export function InterstitialHost({ children }: { children: React.ReactNode }) {
     async (z: string, firstOpen: boolean): Promise<AdOutcome> => {
       if (showing) return { kind: 'user-closed' };
       if (!features.interstitialAds) return { kind: 'capped', reason: 'frequency' };
+      if (!adsConsented) return { kind: 'capped', reason: 'frequency' };
       if (!provider) await initAds();
       const p = provider ?? getProvider();
       if (!p) return { kind: 'error', zoneId: z, message: 'ads not initialized' };
@@ -52,7 +55,7 @@ export function InterstitialHost({ children }: { children: React.ReactNode }) {
         return { kind: 'error', zoneId: z, message: 'interstitial failed' };
       }
     },
-    [showing, provider, isMock],
+    [showing, provider, isMock, adsConsented],
   );
 
   useEffect(() => {

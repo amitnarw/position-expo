@@ -65,10 +65,12 @@ export default function SettingsScreen() {
   const intent = useSettings((state) => state.intent);
   const comfort = useSettings((state) => state.comfort);
   const ageVerified = useSettings((state) => state.ageVerified);
+  const adsConsented = useSettings((state) => state.adsConsented);
 
   const setTheme = useSettings((state) => state.setTheme);
   const setEdition = useSettings((state) => state.setEdition);
   const setHaptics = useSettings((state) => state.setHaptics);
+  const setAdsConsented = useSettings((state) => state.setAdsConsented);
   const personalizeAgain = useSettings((state) => state.personalizeAgain);
 
   const version = Constants.expoConfig?.version ?? '1.0.0';
@@ -273,8 +275,47 @@ export default function SettingsScreen() {
           Version {version}
         </AppText>
         <AppText variant="small" className="mt-3 max-w-[480px]">
-          Local only. No account, no analytics, no tracking.
+          Educational content for adults. Your favourites and history stay on
+          your device — nothing is uploaded. FORMA shows advertising to support
+          development; see Privacy for details.
         </AppText>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Privacy policy"
+          onPress={() => {
+            haptics.tap();
+            router.push('/privacy');
+          }}
+          className="mt-4 flex-row items-center gap-2 active:opacity-60">
+          <AppText variant="small" tone="muted" className="font-sans-medium">
+            Privacy policy
+          </AppText>
+        </Pressable>
+
+        <View className="mt-8">
+          <View className="flex-row items-center justify-between gap-4">
+            <View className="flex-1">
+              <AppText variant="subtitle" className="text-[17px] leading-6">
+                Allow advertising
+              </AppText>
+              <AppText variant="small" className="mt-1 max-w-[420px]">
+                FORMA shows banners and occasional interstitials. Turning this
+                off hides ads.
+              </AppText>
+            </View>
+            <Switch
+              value={adsConsented}
+              accessibilityLabel="Allow advertising"
+              onValueChange={(value) => {
+                setAdsConsented(value);
+                haptics.select();
+              }}
+              trackColor={{ false: colors.line, true: colors.accent }}
+              thumbColor={colors.paper}
+              ios_backgroundColor={colors.line}
+            />
+          </View>
+        </View>
       </SettingsSection>
 
       <Rule />

@@ -7,6 +7,7 @@ import { AppText } from '@/components/ui/app-text';
 import { Rule } from '@/components/ui/rule';
 import { Screen } from '@/components/ui/screen';
 import { SectionHeader } from '@/components/ui/section-header';
+import { AdSlot } from '@/components/ads/AdSlot';
 import { allCollections, allGuides, positionsIn } from '@/content';
 import { haptics } from '@/lib/haptics';
 import { layout } from '@/theme/scale';
@@ -126,6 +127,8 @@ export default function LearnScreen() {
           );
         })}
       </View>
+
+      <AdSlot />
 
     </Screen>
   );

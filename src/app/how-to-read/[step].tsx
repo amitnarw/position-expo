@@ -42,7 +42,9 @@ export default function HowToReadScreen() {
   const goBack = () => {
     haptics.tap();
     if (index === 0) {
-      router.replace('/onboarding');
+      // Back on the first step skips the rest of the intro.
+      setIntroDone();
+      router.replace('/today');
     } else {
       router.replace(`/how-to-read/${PAGES[index - 1].id}`);
     }

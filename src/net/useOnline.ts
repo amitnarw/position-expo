@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import * as Network from 'expo-network';
 
 /**
@@ -13,19 +13,32 @@ import * as Network from 'expo-network';
 export function useOnline() {
   const [online, setOnline] = useState<boolean | null>(null);
 
+  const setReachable = useCallback((value: boolean | null) => {
+    setOnline(value);
+  }, []);
+
+  const check = useCallback(async () => {
+    try {
+      const state = await Network.getNetworkStateAsync();
+      setReachable(state.isInternetReachable ?? false);
+    } catch {
+      setReachable(false);
+    }
+  }, [setReachable]);
+
   useEffect(() => {
     let mounted = true;
 
-    const check = async () => {
+    // Initial reachability read. The setState happens inside an async callback,
+    // not synchronously in the effect body, so it cannot cascade renders.
+    void (async () => {
       try {
         const state = await Network.getNetworkStateAsync();
         if (mounted) setOnline(state.isInternetReachable ?? false);
       } catch {
         if (mounted) setOnline(false);
       }
-    };
-
-    check();
+    })();
 
     const subscription = Network.addNetworkStateListener((state) => {
       if (mounted) setOnline(state.isInternetReachable ?? false);
@@ -37,5 +50,5 @@ export function useOnline() {
     };
   }, []);
 
-  return online;
+  return { online, refetch: check };
 }

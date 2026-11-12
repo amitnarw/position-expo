@@ -59,12 +59,17 @@ export class AdMobProvider implements AdProvider {
   private fullScreen(createAd: () => FullScreenAd, zoneId: string): Promise<AdOutcome> {
     return new Promise((resolve) => {
       let resolved = false;
+      let timer: ReturnType<typeof setTimeout> | null = null;
       const finish = (outcome: AdOutcome) => {
         if (!resolved) {
           resolved = true;
+          if (timer) clearTimeout(timer);
           resolve(outcome);
         }
       };
+
+      // 30s safety timeout: a hung SDK must not lock the app forever.
+      timer = setTimeout(() => finish({ kind: 'error', zoneId, message: 'ad timeout' }), 30000);
 
       const ad = createAd();
 
