@@ -78,32 +78,37 @@ export function PoseArt({ pose, size, animate = false, mono = false, ground }: P
 
   const paint = (width: number) => {
     if (!figures) return null;
+    // Paths are authored in a fixed 1000x1000 space; Skia has no viewBox, so the
+    // whole scene has to be scaled to the measured canvas or it gets clipped.
+    const fit = width / VIEWBOX;
     return (
       <Canvas style={{ width, height: width }}>
-        <Group transform={transform}>
-          {figures.map((figure, figureIndex) => {
-            const tone = colorFor(figure);
-            return (
-              <Group key={`figure-${figureIndex}`}>
-                {figure.halo.map((path, index) => (
-                  <Path key={`halo-${index}`} path={path} style="fill" color={background} />
-                ))}
-                {figure.body.map((path, index) => (
-                  <Group key={`body-${index}`}>
-                    <Path path={path} style="fill" color={background} />
-                    <Path
-                      path={path}
-                      style="stroke"
-                      color={tone}
-                      strokeWidth={strokeWidth}
-                      strokeJoin="round"
-                      strokeCap="round"
-                    />
-                  </Group>
-                ))}
-              </Group>
-            );
-          })}
+        <Group transform={[{ scale: fit }]}>
+          <Group transform={transform}>
+            {figures.map((figure, figureIndex) => {
+              const tone = colorFor(figure);
+              return (
+                <Group key={`figure-${figureIndex}`}>
+                  {figure.halo.map((path, index) => (
+                    <Path key={`halo-${index}`} path={path} style="fill" color={background} />
+                  ))}
+                  {figure.body.map((path, index) => (
+                    <Group key={`body-${index}`}>
+                      <Path path={path} style="fill" color={background} />
+                      <Path
+                        path={path}
+                        style="stroke"
+                        color={tone}
+                        strokeWidth={strokeWidth}
+                        strokeJoin="round"
+                        strokeCap="round"
+                      />
+                    </Group>
+                  ))}
+                </Group>
+              );
+            })}
+          </Group>
         </Group>
       </Canvas>
     );

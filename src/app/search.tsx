@@ -1,167 +1,203 @@
-import { router } from 'expo-router';
-import { ChevronRight, Search } from 'lucide-react-native';
 import { useMemo, useState } from 'react';
-import { Pressable, ScrollView, TextInput, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { ScrollView, TextInput, View } from 'react-native';
+import { router } from 'expo-router';
+import { ChevronLeft, Search as SearchIcon, X } from 'lucide-react-native';
 
+import { AdSlot } from '@/components/ads/AdSlot';
+import { GuideRow } from '@/components/content/GuideRow';
+import { PlateTile } from '@/components/content/PlateTile';
 import { AppText } from '@/components/ui/app-text';
-import { Chip } from '@/components/ui/chip';
-import { Rule } from '@/components/ui/rule';
-import { search, type SearchHit } from '@/content';
-import { haptics } from '@/lib/haptics';
-import { layout } from '@/theme/scale';
+import { IconButton } from '@/components/ui/icon-button';
+import { PressableScale } from '@/components/ui/pressable-scale';
+import { Screen } from '@/components/ui/screen';
+import { allGuides, allPositions, type Guide, type Position } from '@/content';
 import { useTheme } from '@/theme/ThemeProvider';
 
-const suggestions = ['consent', 'slow', 'wall', 'beginner', 'oral', 'side lying'];
-
-const groups: { kind: SearchHit['kind']; label: string }[] = [
-  { kind: 'position', label: 'Plates' },
-  { kind: 'guide', label: 'Guides' },
-  { kind: 'collection', label: 'Collections' },
-];
-
-const kindLabel: Record<SearchHit['kind'], string> = {
-  position: 'Plate',
-  guide: 'Guide',
-  collection: 'Collection',
-};
-
-function openHit(hit: SearchHit) {
-  haptics.tap();
-
-  if (hit.kind === 'position') {
-    router.push({ pathname: '/plate/[slug]', params: { slug: hit.slug } });
-    return;
+function chunk<T>(items: T[], size: number): T[][] {
+  const result: T[][] = [];
+  for (let i = 0; i < items.length; i += size) {
+    result.push(items.slice(i, i + size));
   }
-
-  if (hit.kind === 'guide') {
-    router.push({ pathname: '/guide/[slug]', params: { slug: hit.slug } });
-    return;
-  }
-
-  router.push({ pathname: '/collection/[slug]', params: { slug: hit.slug } });
+  return result;
 }
 
 export default function SearchScreen() {
   const { colors } = useTheme();
   const [query, setQuery] = useState('');
 
-  const results = useMemo(() => search(query, 40), [query]);
+  const trimmed = query.trim().toLowerCase();
+
+  const matchingPositions = useMemo<Position[]>(() => {
+    if (!trimmed) return [];
+    return allPositions.filter((pos) => {
+      const matchTitle = pos.title.toLowerCase().includes(trimmed);
+      const matchCommon = pos.commonName.toLowerCase().includes(trimmed);
+      const matchTags = pos.tags.some((tag) => tag.toLowerCase().includes(trimmed));
+      const matchSummary = pos.summary.toLowerCase().includes(trimmed);
+      return matchTitle || matchCommon || matchTags || matchSummary;
+    });
+  }, [trimmed]);
+
+  const matchingGuides = useMemo<Guide[]>(() => {
+    if (!trimmed) return [];
+    return allGuides.filter((guide) => {
+      const matchTitle = guide.title.toLowerCase().includes(trimmed);
+      const matchKicker = guide.kicker.toLowerCase().includes(trimmed);
+      const matchSummary = guide.summary.toLowerCase().includes(trimmed);
+      const matchTopics = guide.topics.some((topic) => topic.toLowerCase().includes(trimmed));
+      return matchTitle || matchKicker || matchSummary || matchTopics;
+    });
+  }, [trimmed]);
+
+  const hasSearched = trimmed.length > 0;
+  const hasResults = matchingPositions.length > 0 || matchingGuides.length > 0;
 
   return (
-    <SafeAreaView edges={['top', 'bottom']} className="flex-1 bg-paper">
-      <View
-        className="flex-1"
-        style={{ width: '100%', maxWidth: layout.maxWidth, alignSelf: 'center' }}>
-        <View className="px-6">
-          <View className="flex-row items-center gap-3 pt-2 pb-4">
-            <View className="flex-1 flex-row items-center rounded-pill border border-line bg-surface px-4">
-              <Search size={16} color={colors.muted} strokeWidth={1.8} />
-              <TextInput
-                value={query}
-                onChangeText={setQuery}
-                autoFocus
-                placeholder="Search the atlas"
-                placeholderTextColor={colors.muted}
-                returnKeyType="search"
-                clearButtonMode="while-editing"
-                accessibilityLabel="Search the atlas"
-                className="ml-2 flex-1 py-3 font-sans text-body"
-                style={{ color: colors.ink }}
-              />
-            </View>
-
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="Cancel search"
-              onPress={() => router.back()}
-              hitSlop={8}
-              className="py-2 active:opacity-60">
-              <AppText variant="small" className="font-sans-medium">
-                Cancel
-              </AppText>
-            </Pressable>
+    <Screen edges={['top', 'bottom']} className="flex-1">
+      {/* Search Header */}
+      <View className="px-5 pb-3 pt-2">
+        <View className="flex-row items-center gap-3">
+          <IconButton
+            icon={ChevronLeft}
+            label="Back"
+            onPress={() => {
+              if (router.canGoBack()) router.back();
+              else router.replace('/home' as any);
+            }}
+          />
+          <View
+            className="flex-1 flex-row items-center rounded-full px-3.5 py-2"
+            style={{
+              backgroundColor: colors.surface,
+              borderWidth: 0,
+            }}>
+            <SearchIcon size={18} color={colors.muted} />
+            <TextInput
+              value={query}
+              onChangeText={setQuery}
+              placeholder="Search positions, guides, tags..."
+              placeholderTextColor={colors.muted}
+              autoFocus
+              returnKeyType="search"
+              clearButtonMode="while-editing"
+              style={{
+                flex: 1,
+                marginLeft: 8,
+                fontSize: 15,
+                color: colors.ink,
+                paddingVertical: 0,
+              }}
+            />
+            {query.length > 0 ? (
+              <PressableScale
+                accessibilityRole="button"
+                accessibilityLabel="Clear search"
+                scaleTo={0.9}
+                onPress={() => setQuery('')}
+                className="p-1">
+                <X size={16} color={colors.muted} />
+              </PressableScale>
+            ) : null}
           </View>
         </View>
+      </View>
 
-        <ScrollView
-          className="flex-1"
-          keyboardShouldPersistTaps="handled"
-          keyboardDismissMode="on-drag"
-          automaticallyAdjustKeyboardInsets
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 32 }}>
-        {query.trim().length === 0 ? (
-          <View className="pt-6">
-            <AppText variant="label">Try</AppText>
-            <View className="mt-4 flex-row flex-wrap gap-2">
-              {suggestions.map((suggestion) => (
-                <Chip
-                  key={suggestion}
-                  label={suggestion}
-                  onPress={() => setQuery(suggestion)}
-                />
+      {/* Content Area */}
+      <ScrollView
+        contentContainerStyle={{
+          paddingHorizontal: 20,
+          paddingTop: 8,
+          paddingBottom: 60,
+          flexGrow: 1,
+          justifyContent: !hasSearched || !hasResults ? 'center' : undefined,
+        }}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
+        showsVerticalScrollIndicator={false}>
+        {!hasSearched ? (
+          <View className="items-center justify-center px-7 pb-16">
+            <View
+              className="items-center justify-center mb-4"
+              style={{
+                width: 64,
+                height: 64,
+                borderRadius: 32,
+                backgroundColor: colors.surface2,
+              }}>
+              <SearchIcon size={26} color={colors.muted} strokeWidth={1.6} />
+            </View>
+            <AppText variant="headline" style={{ textAlign: 'center' }}>
+              Search FORMA
+            </AppText>
+            <AppText
+              variant="body"
+              tone="muted"
+              style={{ textAlign: 'center', marginTop: 8, maxWidth: 280 }}>
+              Find positions, movement guides, and tags across the complete library.
+            </AppText>
+          </View>
+        ) : null}
+
+        {hasSearched && !hasResults ? (
+          <View className="items-center justify-center px-7 pb-16">
+            <View
+              className="items-center justify-center mb-4"
+              style={{
+                width: 64,
+                height: 64,
+                borderRadius: 32,
+                backgroundColor: colors.surface2,
+              }}>
+              <SearchIcon size={26} color={colors.muted} strokeWidth={1.6} />
+            </View>
+            <AppText variant="headline" style={{ textAlign: 'center' }}>
+              No matches found
+            </AppText>
+            <AppText
+              variant="body"
+              tone="muted"
+              style={{ textAlign: 'center', marginTop: 8, maxWidth: 280 }}>
+              We could not find anything matching &quot;{query}&quot;. Try a different search term.
+            </AppText>
+          </View>
+        ) : null}
+
+        {hasSearched && matchingPositions.length > 0 ? (
+          <View>
+            <AppText variant="label" className="mb-3">
+              Positions ({matchingPositions.length})
+            </AppText>
+            <View className="gap-3">
+              {chunk(matchingPositions, 2).map((row) => (
+                <View key={row[0].slug} className="flex-row gap-3">
+                  {row.map((position, index) => (
+                    <PlateTile key={position.slug} position={position} index={index} />
+                  ))}
+                  {row.length === 1 ? <View className="flex-1" /> : null}
+                </View>
               ))}
             </View>
-            <AppText variant="small" className="mt-8 max-w-[420px]">
-              Search by plate name, plain-language name, pace, setting, or the subject of a guide.
-            </AppText>
           </View>
         ) : null}
 
-        {query.trim().length > 0 && results.length === 0 ? (
-          <View className="pt-10">
-            <AppText
-              variant="display"
-              className="font-display-italic text-[40px] leading-[46px]">
-              Nothing under that word yet.
+        {hasSearched && matchingGuides.length > 0 ? (
+          <View className={matchingPositions.length > 0 ? 'mt-8' : ''}>
+            <AppText variant="label" className="mb-3">
+              Guides ({matchingGuides.length})
             </AppText>
-            <AppText variant="body" className="mt-4 max-w-[420px]">
-              Try a plainer word — a setting, a pace, or a part of the body. Searching for “slow”
-              or “bed” usually finds something.
-            </AppText>
+            <View style={{ gap: 14 }}>
+              {matchingGuides.map((guide, index) => (
+                <GuideRow key={guide.slug} guide={guide} index={index} />
+              ))}
+            </View>
           </View>
         ) : null}
+      </ScrollView>
 
-        {query.trim().length > 0
-          ? groups.map((group) => {
-              const hits = results.filter((hit) => hit.kind === group.kind);
-              if (hits.length === 0) return null;
-
-              return (
-                <View key={group.kind} className="mt-6">
-                  <AppText variant="label">{group.label}</AppText>
-                  <View className="mt-2">
-                    <Rule />
-                  </View>
-
-                  {hits.map((hit) => (
-                    <Pressable
-                      key={`${hit.kind}:${hit.slug}`}
-                      accessibilityRole="button"
-                      accessibilityLabel={`${kindLabel[hit.kind]}: ${hit.title}`}
-                      accessibilityHint={hit.subtitle}
-                      onPress={() => openHit(hit)}
-                      className="flex-row items-center gap-3 py-4 active:opacity-60">
-                      <View className="flex-1">
-                        <AppText variant="subtitle" className="text-[17px] leading-6">
-                          {hit.title}
-                        </AppText>
-                        <AppText variant="small" className="mt-0.5" numberOfLines={1}>
-                          {hit.subtitle}
-                        </AppText>
-                      </View>
-
-                      <AppText variant="label">{kindLabel[hit.kind]}</AppText>
-                      <ChevronRight size={16} color={colors.muted} strokeWidth={1.6} />
-                    </Pressable>
-                  ))}
-                </View>
-              );
-            })
-          : null}
-        </ScrollView>
+      {/* Bottom Banner Ad */}
+      <View className="items-center pb-2 pt-1 bg-transparent">
+        <AdSlot />
       </View>
-    </SafeAreaView>
+    </Screen>
   );
 }

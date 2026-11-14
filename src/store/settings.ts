@@ -2,46 +2,35 @@ import Storage from 'expo-sqlite/kv-store';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
-import type { AccentEdition } from '@/theme/tokens';
-
-export type Intent = 'learn' | 'explore' | 'connect';
-export type Comfort = 'gentle' | 'curious' | 'adventurous';
 export type ThemePreference = 'system' | 'light' | 'dark';
 
 export const SETTINGS_KEY = 'forma.settings';
 
+/**
+ * Deliberately tiny. Everything a new user needs is on by default; the only
+ * real gate is the one-button welcome screen.
+ */
 type SettingsState = {
   hydrated: boolean;
-  ageVerified: boolean;
   onboarded: boolean;
-  introDone: boolean;
   adsConsented: boolean;
-  intent: Intent | null;
-  comfort: Comfort | null;
   theme: ThemePreference;
-  edition: AccentEdition;
   haptics: boolean;
-  verifyAge: () => void;
-  completeOnboarding: (input: { intent: Intent; comfort: Comfort }) => void;
-  setIntroDone: () => void;
+  enter: () => void;
   setAdsConsented: (consented: boolean) => void;
   setTheme: (theme: ThemePreference) => void;
-  setEdition: (edition: AccentEdition) => void;
   setHaptics: (enabled: boolean) => void;
-  personalizeAgain: () => void;
   resetAll: () => void;
   markHydrated: () => void;
 };
 
 const defaults = {
-  ageVerified: false,
   onboarded: false,
-  introDone: false,
-  adsConsented: false,
-  intent: null,
-  comfort: null,
-  theme: 'system' as ThemePreference,
-  edition: 'clay' as AccentEdition,
+  // Test builds show AdMob sandbox creatives by default; the Settings switch
+  // lets a tester turn them off. Real monetisation is a separate decision.
+  adsConsented: true,
+  // The app is designed dark-first; System and Light stay available.
+  theme: 'dark' as ThemePreference,
   haptics: true,
 };
 
@@ -50,18 +39,13 @@ export const useSettings = create<SettingsState>()(
     (set) => ({
       ...defaults,
       hydrated: false,
-      verifyAge: () => set({ ageVerified: true }),
-      completeOnboarding: ({ intent, comfort }) =>
-        set({ intent, comfort, onboarded: true, introDone: false, adsConsented: false }),
-      setIntroDone: () => set({ introDone: true }),
-      setAdsConsented: (consented: boolean) => set({ adsConsented: consented }),
+      enter: () => set({ onboarded: true }),
+      setAdsConsented: (adsConsented: boolean) => set({ adsConsented }),
       setTheme: (theme) => set({ theme }),
-      setEdition: (edition) => set({ edition }),
       setHaptics: (haptics) => set({ haptics }),
-      personalizeAgain: () => set({ onboarded: false, introDone: false, adsConsented: false }),
       resetAll: () => {
         void Storage.removeItem(SETTINGS_KEY);
-        set({ ...defaults, hydrated: true, ageVerified: false });
+        set({ ...defaults, hydrated: true });
       },
       markHydrated: () => set({ hydrated: true }),
     }),

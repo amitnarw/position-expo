@@ -1,16 +1,31 @@
 import { Easing } from 'react-native-reanimated';
 
+/**
+ * Motion contract.
+ *
+ * Exits are always shorter than entrances: leaving has to feel like it got out
+ * of the way. Anything that only fades spends even less time.
+ */
 export const duration = {
-  fast: 160,
-  base: 300,
-  slow: 560,
-  hero: 900,
+  instant: 90,
+  exit: 160,
+  quick: 120,
+  enter: 300,
+  hero: 340,
 } as const;
 
 export const easing = {
-  out: Easing.out(Easing.cubic),
-  inOut: Easing.inOut(Easing.cubic),
-  expo: Easing.out(Easing.exp),
+  enter: Easing.bezier(0.16, 1, 0.3, 1),
+  exit: Easing.bezier(0.4, 0, 1, 1),
+  inOut: Easing.bezier(0.4, 0, 0.2, 1),
+} as const;
+
+export const spring = {
+  press: { damping: 16, stiffness: 420, mass: 0.55 },
+  release: { damping: 14, stiffness: 380, mass: 0.6 },
+  pill: { damping: 22, stiffness: 260, mass: 0.7 },
+  sheet: { damping: 24, stiffness: 240, mass: 0.8 },
+  pop: { damping: 12, stiffness: 320, mass: 0.6 },
 } as const;
 
 export const space = {
@@ -28,7 +43,7 @@ export const space = {
 } as const;
 
 export const layout = {
-  gutter: 24,
+  gutter: 20,
   tabBarSpace: 124,
   maxWidth: 760,
   hitSlop: { top: 8, bottom: 8, left: 8, right: 8 },

@@ -9,8 +9,10 @@ const HISTORY_LIMIT = 24;
 type LibraryState = {
   hydrated: boolean;
   favorites: string[];
+  favoriteGuides: string[];
   history: string[];
   toggleFavorite: (slug: string) => void;
+  toggleFavoriteGuide: (slug: string) => void;
   recordView: (slug: string) => void;
   clearHistory: () => void;
   resetAll: () => void;
@@ -22,6 +24,7 @@ export const useLibrary = create<LibraryState>()(
     (set, get) => ({
       hydrated: false,
       favorites: [],
+      favoriteGuides: [],
       history: [],
       toggleFavorite: (slug) => {
         const favorites = get().favorites;
@@ -31,6 +34,14 @@ export const useLibrary = create<LibraryState>()(
             : [slug, ...favorites],
         });
       },
+      toggleFavoriteGuide: (slug) => {
+        const favoriteGuides = get().favoriteGuides ?? [];
+        set({
+          favoriteGuides: favoriteGuides.includes(slug)
+            ? favoriteGuides.filter((item) => item !== slug)
+            : [slug, ...favoriteGuides],
+        });
+      },
       recordView: (slug) => {
         const history = get().history.filter((item) => item !== slug);
         set({ history: [slug, ...history].slice(0, HISTORY_LIMIT) });
@@ -38,7 +49,7 @@ export const useLibrary = create<LibraryState>()(
       clearHistory: () => set({ history: [] }),
       resetAll: () => {
         void Storage.removeItem(LIBRARY_KEY);
-        set({ hydrated: true, favorites: [], history: [] });
+        set({ hydrated: true, favorites: [], favoriteGuides: [], history: [] });
       },
       markHydrated: () => set({ hydrated: true }),
     }),
@@ -55,4 +66,8 @@ export const useLibrary = create<LibraryState>()(
 
 export function useIsFavorite(slug: string) {
   return useLibrary((state) => state.favorites.includes(slug));
+}
+
+export function useIsFavoriteGuide(slug: string) {
+  return useLibrary((state) => (state.favoriteGuides ?? []).includes(slug));
 }

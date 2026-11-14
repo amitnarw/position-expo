@@ -1,38 +1,43 @@
 import { router, useLocalSearchParams } from 'expo-router';
-import { ChevronLeft, ChevronRight } from 'lucide-react-native';
-import { Pressable, View } from 'react-native';
+import { ChevronLeft, ChevronRight, Heart } from 'lucide-react-native';
+import { ScrollView, View } from 'react-native';
 
+import { AdSlot } from '@/components/ads/AdSlot';
 import { BulletList, NoteCard } from '@/components/content/editorial';
-import { ModalHeader } from '@/components/content/modal-header';
 import { AppText } from '@/components/ui/app-text';
 import { Button } from '@/components/ui/button';
 import { IconButton } from '@/components/ui/icon-button';
+import { PressableScale } from '@/components/ui/pressable-scale';
+import { Appear } from '@/components/ui/reveal';
 import { Rule } from '@/components/ui/rule';
 import { Screen } from '@/components/ui/screen';
 import { allGuides, getGuide } from '@/content';
-import { haptics } from '@/lib/haptics';
+import { useIsFavoriteGuide, useLibrary } from '@/store/library';
 import { layout } from '@/theme/scale';
 import { useTheme } from '@/theme/ThemeProvider';
 
-function GuideNotFound() {
+function close() {
+  if (router.canGoBack()) {
+    router.back();
+  } else {
+    router.replace('/home');
+  }
+}
+
+function NotFound() {
   return (
     <Screen edges={['top', 'bottom']} padded>
-      <View className="pt-2 pb-4">
-        <IconButton icon={ChevronLeft} label="Close" onPress={() => router.back()} />
+      <View className="pt-2">
+        <IconButton icon={ChevronLeft} label="Back" onPress={close} />
       </View>
-      <View className="flex-1 items-center justify-center pb-24">
+      <View className="flex-1 items-center justify-center pb-20">
         <AppText variant="title" className="text-center font-display-italic">
           Guide not found.
         </AppText>
-        <AppText variant="body" className="mt-3 max-w-[320px] text-center">
-          This guide may have moved. Everything else is waiting on the Learn shelf.
+        <AppText variant="body" className="mt-3 max-w-[300px] text-center">
+          This guide may have moved. The rest of the shelf is one tap away.
         </AppText>
-        <Button
-          label="Close"
-          variant="secondary"
-          onPress={() => router.back()}
-          className="mt-6"
-        />
+        <Button label="Back to guides" variant="secondary" onPress={close} className="mt-6" />
       </View>
     </Screen>
   );
@@ -41,10 +46,12 @@ function GuideNotFound() {
 export default function GuideScreen() {
   const { slug } = useLocalSearchParams<{ slug: string }>();
   const guide = getGuide(slug);
+  const saved = useIsFavoriteGuide(guide?.slug ?? '');
+  const toggleFavoriteGuide = useLibrary((state) => state.toggleFavoriteGuide);
   const { colors } = useTheme();
 
   if (!guide) {
-    return <GuideNotFound />;
+    return <NotFound />;
   }
 
   const index = allGuides.findIndex((item) => item.slug === guide.slug);
@@ -52,128 +59,152 @@ export default function GuideScreen() {
 
   return (
     <Screen
-      scroll
       edges={['top', 'bottom']}
-      padded
-      bottomSpace={48}
+      className="flex-1"
       style={{ width: '100%', maxWidth: layout.maxWidth, alignSelf: 'center' }}>
-      <ModalHeader
-        label={`GUIDE ${String(guide.order).padStart(2, '0')} · ${guide.minutes} MIN`}
-      />
-
-      <AppText variant="label">{guide.kicker}</AppText>
-      <AppText variant="display" className="mt-3">
-        {guide.title}
-      </AppText>
-      <AppText variant="body" className="mt-4 max-w-[600px]">
-        {guide.summary}
-      </AppText>
-
-      <View className="mt-8">
-        <Rule />
+      {/* Sticky Top Header */}
+      <View className="flex-row items-center justify-between px-5 pt-2 pb-2 z-20">
+        <IconButton icon={ChevronLeft} label="Back" onPress={close} />
+        <View className="flex-row items-center gap-3">
+          <AppText variant="caption" tone="muted">
+            {guide.minutes} min read
+          </AppText>
+          <IconButton
+            icon={Heart}
+            label={saved ? 'Remove from favorites' : 'Save guide'}
+            selected={saved}
+            onPress={() => toggleFavoriteGuide(guide.slug)}
+          />
+        </View>
       </View>
 
-      <View className="mt-6">
-        {guide.blocks.map((block, blockIndex) => {
-          if (block.kind === 'paragraph') {
-            return (
-              <AppText key={blockIndex} variant="body" className="mb-5 max-w-[600px]">
-                {block.text}
-              </AppText>
-            );
-          }
+      {/* Scrolling Content with native edge fading */}
+      <ScrollView
+        className="flex-1"
+        showsVerticalScrollIndicator={false}
+        fadingEdgeLength={40}
+        contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 6, paddingBottom: 28 }}>
+        <Appear delay={40} className="mt-3">
+          <AppText variant="label">
+            Guide {String(guide.order).padStart(2, '0')} · {guide.kicker}
+          </AppText>
+          <AppText variant="title" className="mt-2">
+            {guide.title}
+          </AppText>
+          <AppText variant="body" className="mt-3 max-w-[600px]">
+            {guide.summary}
+          </AppText>
+        </Appear>
 
-          if (block.kind === 'heading') {
-            return (
-              <AppText key={blockIndex} variant="headline" className="mt-8 mb-3 max-w-[600px]">
-                {block.text}
-              </AppText>
-            );
-          }
+        <View className="mt-7">
+          <Rule />
+        </View>
 
-          if (block.kind === 'list') {
-            return <BulletList key={blockIndex} items={block.items} className="mb-6" />;
-          }
-
-          if (block.kind === 'steps') {
-            return (
-              <View key={blockIndex} className="mb-6 gap-3">
-                {block.items.map((item, stepIndex) => (
-                  <View key={stepIndex} className="rounded-card border border-line bg-surface p-4">
-                    <View className="flex-row items-baseline gap-3">
-                      <AppText className="font-display text-[22px] leading-7 text-clay">
-                        {String(stepIndex + 1).padStart(2, '0')}
-                      </AppText>
-                      <AppText variant="subtitle" className="flex-1 text-[17px] leading-6">
-                        {item.title}
-                      </AppText>
-                    </View>
-                    <AppText variant="body" className="mt-2 max-w-[560px]">
-                      {item.text}
-                    </AppText>
-                  </View>
-                ))}
-              </View>
-            );
-          }
-
-          if (block.kind === 'quote') {
-            return (
-              <View key={blockIndex} className="my-7 border-l-2 border-clay pl-5">
-                <AppText variant="quote" className="max-w-[560px]">
+        <Appear delay={90} className="mt-5">
+          {guide.blocks.map((block, blockIndex) => {
+            if (block.kind === 'paragraph') {
+              return (
+                <AppText key={blockIndex} variant="body" className="mb-5 max-w-[600px]">
                   {block.text}
                 </AppText>
-                {block.cite ? (
-                  <AppText variant="small" className="mt-2">
-                    {block.cite}
+              );
+            }
+
+            if (block.kind === 'heading') {
+              return (
+                <AppText key={blockIndex} variant="headline" className="mt-8 mb-3 max-w-[600px]">
+                  {block.text}
+                </AppText>
+              );
+            }
+
+            if (block.kind === 'list') {
+              return <BulletList key={blockIndex} items={block.items} className="mb-6" />;
+            }
+
+            if (block.kind === 'steps') {
+              return (
+                <View key={blockIndex} className="mb-6 gap-3">
+                  {block.items.map((item, stepIndex) => (
+                    <View key={stepIndex} className="rounded-card bg-surface p-4">
+                      <View className="flex-row items-baseline gap-3">
+                        <AppText className="font-display text-[21px] text-muted">
+                          {String(stepIndex + 1).padStart(2, '0')}
+                        </AppText>
+                        <AppText variant="subtitle" className="flex-1 text-[17px]">
+                          {item.title}
+                        </AppText>
+                      </View>
+                      <AppText variant="body" className="mt-2 max-w-[560px]">
+                        {item.text}
+                      </AppText>
+                    </View>
+                  ))}
+                </View>
+              );
+            }
+
+            if (block.kind === 'quote') {
+              return (
+                <View key={blockIndex} className="my-7 border-l border-line pl-5">
+                  <AppText variant="quote" className="max-w-[560px]">
+                    {block.text}
                   </AppText>
-                ) : null}
+                  {block.cite ? (
+                    <AppText variant="small" className="mt-2">
+                      {block.cite}
+                    </AppText>
+                  ) : null}
+                </View>
+              );
+            }
+
+            return <NoteCard key={blockIndex} title={block.title} text={block.text} />;
+          })}
+        </Appear>
+
+        <View className="mt-8">
+          <Rule />
+
+          {nextGuide ? (
+            <PressableScale
+              accessibilityRole="button"
+              accessibilityLabel={`Next guide: ${nextGuide.title}`}
+              scaleTo={0.98}
+              onPress={() =>
+                router.replace({ pathname: '/guide/[slug]', params: { slug: nextGuide.slug } })
+              }
+              className="flex-row items-center gap-4 py-5">
+              <View className="flex-1">
+                <AppText variant="label">Next guide</AppText>
+                <AppText variant="headline" className="mt-1.5 text-[22px]">
+                  {nextGuide.title}
+                </AppText>
+                <AppText variant="caption" className="mt-1">
+                  {nextGuide.kicker} · {nextGuide.minutes} min
+                </AppText>
               </View>
-            );
-          }
-
-          return <NoteCard key={blockIndex} title={block.title} text={block.text} />;
-        })}
-      </View>
-
-      <View className="mt-12">
-        <Rule />
-
-        {nextGuide ? (
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={`Next guide: ${nextGuide.title}`}
-            onPress={() => {
-              haptics.tap();
-              router.replace({ pathname: '/guide/[slug]', params: { slug: nextGuide.slug } });
-            }}
-            className="flex-row items-center gap-4 py-5 active:opacity-60">
-            <View className="flex-1">
-              <AppText variant="label">Next guide</AppText>
-              <AppText variant="headline" className="mt-2 text-[24px] leading-[30px]">
-                {nextGuide.title}
+              <ChevronRight size={17} color={colors.muted} strokeWidth={1.6} />
+            </PressableScale>
+          ) : (
+            <PressableScale
+              accessibilityRole="button"
+              accessibilityLabel="Back to home"
+              scaleTo={0.98}
+              onPress={() => router.replace('/home')}
+              className="flex-row items-center gap-2 py-5">
+              <ChevronLeft size={17} color={colors.muted} strokeWidth={1.6} />
+              <AppText variant="small" className="font-sans-medium">
+                Back to all guides
               </AppText>
-              <AppText variant="small" className="mt-1">
-                {nextGuide.kicker} · {nextGuide.minutes} min
-              </AppText>
-            </View>
-            <ChevronRight size={18} color={colors.muted} strokeWidth={1.6} />
-          </Pressable>
-        ) : (
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Back to all guides"
-            onPress={() => {
-              haptics.tap();
-              router.replace('/learn');
-            }}
-            className="flex-row items-center gap-3 py-5 active:opacity-60">
-            <ChevronLeft size={16} color={colors.muted} strokeWidth={1.6} />
-            <AppText variant="small" className="font-sans-medium">
-              Back to all guides
-            </AppText>
-          </Pressable>
-        )}
+            </PressableScale>
+          )}
+        </View>
+      </ScrollView>
+
+      {/* Sticky Bottom Banner Ad */}
+      <View className="items-center pb-2 pt-1 bg-transparent">
+        <AdSlot />
       </View>
     </Screen>
   );

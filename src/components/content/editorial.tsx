@@ -5,25 +5,24 @@ import { AppText } from '@/components/ui/app-text';
 import { cn } from '@/lib/cn';
 
 /**
- * A quiet section heading: an uppercase label with a hairline running to
+ * A quiet section heading: a small muted label with a hairline running to
  * the edge of the column.
  */
 export function SectionTitle({ children, className }: { children: string; className?: string }) {
   return (
-    <View className={cn('mt-10 mb-4 flex-row items-center gap-3', className)}>
+    <View className={cn('mt-10 mb-4', className)}>
       <AppText variant="label">{children}</AppText>
-      <View className="h-px flex-1 bg-line" />
     </View>
   );
 }
 
-/** Numbered instructions with serif numerals in clay. */
+/** Numbered instructions with serif numerals, quiet against the text. */
 export function NumberedSteps({ items }: { items: string[] }) {
   return (
     <View className="gap-5">
       {items.map((item, index) => (
         <View key={index} className="flex-row items-start gap-4">
-          <AppText className="w-7 font-display text-[22px] leading-7 text-clay">
+          <AppText className="w-7 font-display text-[21px] leading-7 text-muted">
             {String(index + 1).padStart(2, '0')}
           </AppText>
           <AppText variant="body" className="flex-1 max-w-[560px]">
@@ -35,13 +34,13 @@ export function NumberedSteps({ items }: { items: string[] }) {
   );
 }
 
-/** A plain list marked with short clay hairlines instead of bullets. */
+/** A plain list marked with short hairlines instead of bullets. */
 export function BulletList({ items, className }: { items: string[]; className?: string }) {
   return (
     <View className={cn('gap-4', className)}>
       {items.map((item, index) => (
         <View key={index} className="flex-row items-start gap-4">
-          <View className="mt-[11px] h-px w-3 bg-clay" />
+          <View className="mt-[12px] h-px w-3 bg-muted" />
           <AppText variant="body" className="flex-1 max-w-[560px]">
             {item}
           </AppText>
@@ -51,7 +50,7 @@ export function BulletList({ items, className }: { items: string[]; className?: 
   );
 }
 
-/** A soft note card for care notes and asides. */
+/** A soft surface for care notes and asides. */
 export function NoteCard({
   title,
   text,
@@ -62,9 +61,9 @@ export function NoteCard({
   children?: ReactNode;
 }) {
   return (
-    <View className="rounded-card bg-surface-2 p-5">
+    <View className="rounded-card bg-surface p-5">
       {title ? (
-        <AppText variant="label" className="mb-3">
+        <AppText variant="label" className="mb-2.5">
           {title}
         </AppText>
       ) : null}

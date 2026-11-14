@@ -1,32 +1,35 @@
 import type { ReactNode } from 'react';
-import { Pressable, View } from 'react-native';
+import { View } from 'react-native';
 
 import { AppText } from '@/components/ui/app-text';
+import { PressableScale } from '@/components/ui/pressable-scale';
 import { cn } from '@/lib/cn';
-import { haptics } from '@/lib/haptics';
 
-type ButtonVariant = 'primary' | 'ink' | 'secondary' | 'ghost';
+type ButtonVariant = 'primary' | 'secondary' | 'ghost';
 type ButtonSize = 'sm' | 'md' | 'lg' | 'block';
 
+/**
+ * Primary is the inverted pill: the fill is `ink` and the label is `paper`,
+ * which reads as the reference's bright control in both schemes. Everything
+ * else is an outline — no second fill weight exists.
+ */
 const containerClass: Record<ButtonVariant, string> = {
-  primary: 'bg-accent',
-  ink: 'bg-ink',
-  secondary: 'border border-line bg-surface',
+  primary: 'bg-ink',
+  secondary: 'border border-line',
   ghost: 'bg-transparent',
 };
 
 const textTone: Record<ButtonVariant, 'paper' | 'ink'> = {
   primary: 'paper',
-  ink: 'paper',
   secondary: 'ink',
   ghost: 'ink',
 };
 
 const sizeClass: Record<ButtonSize, string> = {
-  sm: 'h-9 px-4',
+  sm: 'h-10 px-5',
   md: 'h-12 px-6',
-  lg: 'h-14 px-7',
-  block: 'h-12 w-full px-6',
+  lg: 'h-13 px-7',
+  block: 'h-13 w-full px-6',
 };
 
 type ButtonProps = {
@@ -51,18 +54,16 @@ export function Button({
   accessibilityHint,
 }: ButtonProps) {
   return (
-    <Pressable
+    <PressableScale
       accessibilityRole="button"
       accessibilityLabel={label}
       accessibilityHint={accessibilityHint}
       accessibilityState={{ disabled }}
       disabled={disabled}
-      onPress={() => {
-        haptics.tap();
-        onPress?.();
-      }}
+      scaleTo={0.98}
+      onPress={onPress}
       className={cn(
-        'flex-row items-center justify-center gap-2 rounded-pill active:opacity-70',
+        'flex-row items-center justify-center gap-2 rounded-pill',
         containerClass[variant],
         sizeClass[size],
         disabled && 'opacity-40',
@@ -72,7 +73,7 @@ export function Button({
       <AppText variant="button" tone={textTone[variant]}>
         {label}
       </AppText>
-    </Pressable>
+    </PressableScale>
   );
 }
 

@@ -4,12 +4,11 @@ import { createContext, useContext, useEffect, useMemo, type ReactNode } from 'r
 import { Appearance, useColorScheme } from 'react-native';
 
 import { useSettings } from '@/store/settings';
-import { cssVariablesFor, palettes, type AccentEdition, type Palette, type Scheme } from './tokens';
+import { cssVariablesFor, palettes, type Palette, type Scheme } from './tokens';
 
 type ThemeValue = {
   scheme: Scheme;
   colors: Palette;
-  edition: AccentEdition;
   isDark: boolean;
 };
 
@@ -18,9 +17,9 @@ const ThemeContext = createContext<ThemeValue | null>(null);
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const appearance = useColorScheme();
   const preference = useSettings((state) => state.theme);
-  const edition = useSettings((state) => state.edition);
 
-  const scheme: Scheme = preference === 'system' ? (appearance === 'dark' ? 'dark' : 'light') : preference;
+  const scheme: Scheme =
+    preference === 'system' ? (appearance === 'dark' ? 'dark' : 'light') : preference;
   const colors = palettes[scheme];
 
   useEffect(() => {
@@ -31,10 +30,10 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     SystemUI.setBackgroundColorAsync(colors.paper).catch(() => {});
   }, [colors.paper]);
 
-  const variables = useMemo(() => cssVariablesFor(scheme, edition), [scheme, edition]);
+  const variables = useMemo(() => cssVariablesFor(scheme), [scheme]);
   const value = useMemo<ThemeValue>(
-    () => ({ scheme, colors, edition, isDark: scheme === 'dark' }),
-    [scheme, colors, edition],
+    () => ({ scheme, colors, isDark: scheme === 'dark' }),
+    [scheme, colors],
   );
 
   return (

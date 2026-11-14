@@ -9,6 +9,10 @@ const config: ExpoConfig = {
   scheme: 'forma',
   userInterfaceStyle: 'automatic',
   backgroundColor: '#F7F2EA',
+  // Mobile-only product. Excluding web also stops the release bundle step from
+  // building an Expo Router *server* bundle (which cannot load native-only
+  // modules such as react-native-google-mobile-ads).
+  platforms: ['ios', 'android'],
   ios: {
     icon: './assets/images/icon.png',
     supportsTablet: true,
@@ -24,11 +28,15 @@ const config: ExpoConfig = {
     package: 'com.forma.atlas',
   },
   web: {
-    output: 'server',
+    // 'single' = client-side only. 'server' forces a server bundle on every
+    // export, including native release builds, where native-only ad modules
+    // cannot be resolved.
+    output: 'single',
     favicon: './assets/images/favicon.png',
   },
   plugins: [
     'expo-router',
+    './plugins/with-release-build',
     [
       'expo-splash-screen',
       {
@@ -57,9 +65,9 @@ const config: ExpoConfig = {
   },
   extra: {
     ads: {
-      // Dev builds use the local mock by default. Flip to 'admob' to test
-      // real AdMob test units, or 'webview' for a tag-based production network.
-      provider: 'mock',
+      // AdMob sandbox units for this build. Real monetisation is a separate
+      // (and policy-sensitive) decision.
+      provider: 'admob',
       testMode: true,
       zones: {
         // AdMob sandbox test unit IDs — test creatives only, never real account IDs.

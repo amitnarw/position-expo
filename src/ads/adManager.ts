@@ -1,10 +1,11 @@
-import { useState, useCallback } from 'react';
-import { adConfig, type AdConfig } from './config';
+import { useCallback, useState } from 'react';
+
 import { features } from '@/config/features';
-import { mockProvider } from './mock';
-import { admobProvider } from './admob';
 import { useSettings } from '@/store/settings';
-import type { AdProvider, AdOutcome, AdCaps } from './types';
+import { admobProvider } from './admob';
+import { adConfig, type AdConfig } from './config';
+import { mockProvider } from './mock';
+import type { AdCaps, AdOutcome, AdProvider } from './types';
 
 function resolveProvider(config: AdConfig): AdProvider {
   switch (config.provider) {
@@ -20,28 +21,33 @@ function resolveProvider(config: AdConfig): AdProvider {
 }
 
 let provider: AdProvider | null = null;
-let isInitialized = false;
-let caps: AdCaps = { appOpenShown: false, interstitialCount: 0, bannerCount: 0 };
+let initPromise: Promise<void> | null = null;
+const caps: AdCaps = { appOpenShown: false, interstitialCount: 0, bannerCount: 0 };
 
 /** Module-level trigger registered by InterstitialHost. */
-let interstitialTrigger:
-  | ((zoneId: string, firstOpen: boolean) => Promise<AdOutcome>)
-  | null = null;
+let interstitialTrigger: ((zoneId: string) => Promise<AdOutcome>) | null = null;
 
-/** Register the root host's interstitial trigger. Called once on mount. */
-export function registerInterstitialTrigger(
-  fn: (zoneId: string, firstOpen: boolean) => Promise<AdOutcome>,
-) {
+/** Distinct plates opened this session. Drives the one natural ad break. */
+const openedPlates = new Set<string>();
+let pendingInterstitial = false;
+
+export function registerInterstitialTrigger(fn: ((zoneId: string) => Promise<AdOutcome>) | null) {
   interstitialTrigger = fn;
 }
 
 /** Initialize the selected provider once. Safe to call repeatedly. */
-export async function initAds() {
-  if (isInitialized) return;
+export function initAds(): Promise<void> {
+  if (initPromise) return initPromise;
   provider = resolveProvider(adConfig);
-  await provider.initialize();
-  isInitialized = true;
-  console.log(`[ads] provider=${provider.name} testMode=${adConfig.testMode}`);
+  initPromise = provider
+    .initialize()
+    .then(() => {
+      console.log(`[ads] provider=${provider?.name} testMode=${adConfig.testMode}`);
+    })
+    .catch((error) => {
+      console.warn('[ads] initialize failed', error);
+    });
+  return initPromise;
 }
 
 export function getProvider(): AdProvider | null {
@@ -55,7 +61,10 @@ export function recordBanner() {
 export function canShowInterstitial({
   firstOpen,
   adsConsented,
-}: { firstOpen: boolean; adsConsented: boolean }): boolean {
+}: {
+  firstOpen: boolean;
+  adsConsented: boolean;
+}): boolean {
   if (!features.interstitialAds) return false;
   if (!adsConsented) return false;
   if (firstOpen && !adConfig.interstitialOnFirstOpen) return false;
@@ -72,9 +81,26 @@ export function getCaps(): AdCaps {
 }
 
 /**
+ * Call once per plate open. After the third distinct plate in a session we
+ * arm one interstitial, which Home shows when it regains focus.
+ */
+export function recordPlateOpen(slug: string) {
+  openedPlates.add(slug);
+  if (openedPlates.size >= 3) {
+    pendingInterstitial = true;
+  }
+}
+
+/** True at most once per armed break. */
+export function consumePendingInterstitial(): boolean {
+  if (!pendingInterstitial) return false;
+  pendingInterstitial = false;
+  return true;
+}
+
+/**
  * Hook: show an interstitial honoring caps. Routes through InterstitialHost
- * when mounted (so the mock overlay renders), otherwise calls the provider
- * directly.
+ * when mounted, otherwise calls the provider directly.
  */
 export function useInterstitial({ firstOpen }: { firstOpen: boolean }) {
   const [showing, setShowing] = useState(false);
@@ -82,29 +108,18 @@ export function useInterstitial({ firstOpen }: { firstOpen: boolean }) {
 
   const show = useCallback(
     async (zoneId: string): Promise<AdOutcome> => {
-      if (!provider) await initAds();
-      const p = provider;
-      if (!p) return { kind: 'error', zoneId, message: 'ads not initialized' };
+      await initAds();
+      const active = provider;
+      if (!active) return { kind: 'error', zoneId, message: 'ads not initialized' };
       if (!canShowInterstitial({ firstOpen, adsConsented })) {
         return { kind: 'capped', reason: firstOpen ? 'first-open' : 'frequency' };
       }
 
-      // Route through host if registered (renders mock overlay).
-      if (interstitialTrigger) {
-        setShowing(true);
-        try {
-          const outcome = await interstitialTrigger(zoneId, firstOpen);
-          if (outcome.kind === 'ok') recordInterstitial();
-          return outcome;
-        } finally {
-          setShowing(false);
-        }
-      }
-
-      // Direct provider path (production networks present natively).
       setShowing(true);
       try {
-        const outcome = await p.showInterstitial(zoneId);
+        const outcome = interstitialTrigger
+          ? await interstitialTrigger(zoneId)
+          : await active.showInterstitial(zoneId);
         if (outcome.kind === 'ok') recordInterstitial();
         return outcome;
       } finally {

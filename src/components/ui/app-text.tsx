@@ -16,20 +16,29 @@ export type TextVariant =
   | 'quote'
   | 'button';
 
-export type TextTone = 'ink' | 'soft' | 'muted' | 'accent' | 'paper' | 'danger';
+export type TextTone =
+  | 'ink'
+  | 'soft'
+  | 'muted'
+  | 'accent'
+  | 'accentOn'
+  | 'paper'
+  | 'warm'
+  | 'warmInk'
+  | 'danger';
 
 const variantClass: Record<TextVariant, string> = {
   display: 'font-display text-display',
   title: 'font-display text-title',
-  headline: 'font-display-medium text-headline',
+  headline: 'font-display text-headline',
   subtitle: 'font-sans-medium text-subtitle',
   body: 'font-sans text-body',
   small: 'font-sans text-small',
-  caption: 'font-sans-medium text-caption uppercase tracking-[0.14em]',
-  label: 'font-sans-semibold text-label uppercase tracking-[0.16em]',
+  caption: 'font-sans text-caption',
+  label: 'font-sans-semibold text-label',
   numeric: 'font-sans-medium text-numeric tabular-nums',
   quote: 'font-display-italic text-headline',
-  button: 'font-sans-semibold text-[15px] leading-5',
+  button: 'font-sans-semibold text-[14px] leading-5',
 };
 
 const toneClass: Record<TextTone, string> = {
@@ -37,7 +46,10 @@ const toneClass: Record<TextTone, string> = {
   soft: 'text-ink-soft',
   muted: 'text-muted',
   accent: 'text-accent',
+  accentOn: 'text-accent-on',
   paper: 'text-paper',
+  warm: 'text-warm',
+  warmInk: 'text-warm-ink',
   danger: 'text-danger',
 };
 

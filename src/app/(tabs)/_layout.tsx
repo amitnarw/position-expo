@@ -1,28 +1,27 @@
-import { Tabs } from 'expo-router/js-tabs';
+import { TopTabs } from 'expo-router/js-top-tabs';
 
-import { FloatingTabBar } from '@/components/nav/floating-tab-bar';
+import { TabBar } from '@/components/nav/tab-bar';
 import { useTheme } from '@/theme/ThemeProvider';
 
+/**
+ * Home and Settings are pages of a swipeable pager, so a horizontal drag moves
+ * between them. The bar sits at the bottom and is fed the pager's position.
+ */
 export default function TabsLayout() {
   const { colors } = useTheme();
 
   return (
-    <Tabs
+    <TopTabs
+      tabBarPosition="bottom"
+      tabBar={(props) => <TabBar {...props} />}
       screenOptions={{
-        headerShown: false,
+        swipeEnabled: true,
+        animationEnabled: true,
+        lazy: false,
         sceneStyle: { backgroundColor: colors.paper },
-        tabBarStyle: {
-          backgroundColor: 'transparent',
-          borderTopWidth: 0,
-          elevation: 0,
-          shadowOpacity: 0,
-        },
-      }}
-      tabBar={(props) => <FloatingTabBar {...props} />}>
-      <Tabs.Screen name="today" options={{ title: 'Today' }} />
-      <Tabs.Screen name="atlas" options={{ title: 'Atlas' }} />
-      <Tabs.Screen name="learn" options={{ title: 'Learn' }} />
-      <Tabs.Screen name="saved" options={{ title: 'Saved' }} />
-    </Tabs>
+      }}>
+      <TopTabs.Screen name="home" options={{ title: 'Home' }} />
+      <TopTabs.Screen name="settings" options={{ title: 'Settings' }} />
+    </TopTabs>
   );
 }
